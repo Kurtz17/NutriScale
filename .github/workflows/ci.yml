@@ -27,8 +27,8 @@ jobs:
       - name: Run lint
         run: npm run lint
 
-      # - name: Run prettier
-      #   run: npm run prettier:check # Uncomment this line when you have Prettier checks set up
+      - name: Run prettier
+        run: npm run format:check
 
       # - name: Run tests
       #   run: npm test        # Uncomment this line when you have test cases to run
