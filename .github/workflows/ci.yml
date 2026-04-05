@@ -30,8 +30,8 @@ jobs:
       - name: Run prettier
         run: npm run format:check
 
-      # - name: Run tests
-      #   run: npm test        # Uncomment this line when you have test cases to run
+      - name: Run tests
+        run: npm test
 
       - name: Run build check
         run: npm run build
