@@ -1,0 +1,37 @@
+name: CI
+run-name: CI for commit ${{ github.sha }} by @${{ github.actor }}
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+jobs:
+  ci:
+    name: Lint, Prettier, and Test Case Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v6
+
+      - name: Install node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+      
+      # - name: Run prettier
+      #   run: npm run prettier:check # Uncomment this line when you have Prettier checks set up
+
+      # - name: Run tests
+      #   run: npm test        # Uncomment this line when you have test cases to run
+
+      - name: Run build check
+        run: npm run build
