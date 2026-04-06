@@ -1,6 +1,11 @@
+'use client';
+
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div
       style={{
@@ -52,7 +57,13 @@ export default function LoginPage() {
           Welcome Back
         </h2>
 
-        <form style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            alert('Login Berhasil!');
+          }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+        >
           {/* Email Field */}
           <div>
             <label
@@ -81,13 +92,17 @@ export default function LoginPage() {
               <input
                 type="email"
                 placeholder="your.email@example.com"
+                required
                 style={{
                   width: '100%',
                   padding: '12px 12px 12px 40px',
                   borderRadius: '12px',
                   border: '1px solid #e5e7eb',
                   backgroundColor: '#f9fafb',
+                  color: '#1a1a1a',
+                  fontSize: '14px',
                   boxSizing: 'border-box',
+                  outline: 'none',
                 }}
               />
             </div>
@@ -119,29 +134,37 @@ export default function LoginPage() {
                 🔒
               </span>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
+                required
                 style={{
                   width: '100%',
                   padding: '12px 40px 12px 40px',
                   borderRadius: '12px',
                   border: '1px solid #e5e7eb',
                   backgroundColor: '#f9fafb',
+                  color: '#1a1a1a',
+                  fontSize: '14px',
                   boxSizing: 'border-box',
+                  outline: 'none',
                 }}
               />
-              <span
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
                   right: '12px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  color: '#9ca3af',
+                  background: 'none',
+                  border: 'none',
                   cursor: 'pointer',
+                  fontSize: '16px',
                 }}
               >
-                👁️
-              </span>
+                {showPassword ? '🙈' : '👁️'}
+              </button>
             </div>
           </div>
 
