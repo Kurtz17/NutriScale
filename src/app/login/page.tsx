@@ -7,10 +7,12 @@ import { authClient } from '@/lib/auth-client';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -18,6 +20,12 @@ export default function LoginPage() {
     email: '',
     password: '',
   });
+
+  useEffect(() => {
+    if (session) {
+      router.push('/');
+    }
+  }, [session, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -203,7 +211,12 @@ export default function LoginPage() {
             type="button"
             variant="outline"
             className="flex-1 rounded-xl py-6"
-            disabled
+            onClick={async () => {
+              await authClient.signIn.social({
+                provider: 'google',
+                callbackURL: '/',
+              });
+            }}
           >
             <span style={{ fontWeight: 'bold', marginRight: '4px' }}>G</span>{' '}
             Google

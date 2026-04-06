@@ -1,37 +1,53 @@
 'use client';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Section } from '@/components/ui/section';
 import { authClient } from '@/lib/auth-client';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+// 1. Definisikan interface untuk data registrasi
+interface RegisterData {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 export default function Register() {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [verificationPending, setVerificationPending] = useState(false);
 
-  const [registerData, setRegisterData] = useState({
+  useEffect(() => {
+    if (session && !verificationPending) {
+      router.push('/');
+    }
+  }, [session, router, verificationPending]);
+
+  // 2. Gunakan interface pada useState
+  const [registerData, setRegisterData] = useState<RegisterData>({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
-  const [step, setStep] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState('');
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setRegisterData((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleNextStep = async () => {
+  const handleRegister = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setErrorMsg('');
 
     if (
@@ -51,284 +67,295 @@ export default function Register() {
 
     setIsLoading(true);
 
-    const { data, error } = await authClient.signUp.email({
-      name: registerData.fullName,
-      email: registerData.email,
-      password: registerData.password,
-    });
+    try {
+      const { error } = await authClient.signUp.email({
+        name: registerData.fullName,
+        email: registerData.email,
+        password: registerData.password,
+      });
 
-    setIsLoading(false);
-
-    if (error) {
-      setErrorMsg(error.message ?? 'Registrasi gagal. Coba lagi.');
-      return;
+      if (error) {
+        setErrorMsg(error.message ?? 'Registrasi gagal. Coba lagi.');
+      } else {
+        setVerificationPending(true);
+      }
+    } catch (err) {
+      // 3. Menghindari 'any' pada catch block
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Terjadi kesalahan sistem saat mendaftar.';
+      setErrorMsg(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-
-    if (data) {
-      setStep(2);
-    }
-  };
-
-  const handleCompleteRegistration = () => {
-    if (!selectedCategory) return;
-    router.push('/dashboard');
   };
 
   return (
-    <div className="flex flex-col m-28 gap-5">
-      {step === 1 ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled
-          className="flex gap-2 px-0 text-black hover:bg-transparent"
+    // ... isi return JSX kamu tetap sama (tidak ada perubahan di bagian UI)
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        backgroundColor: '#e2eddb',
+        fontFamily: 'sans-serif',
+        padding: '40px 20px',
+      }}
+    >
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+        <h1
+          style={{
+            fontSize: '32px',
+            fontWeight: '800',
+            color: '#1a1a1a',
+            margin: '0',
+          }}
         >
-          <span className="material-symbols-outlined text-black">
-            arrow_left_alt
-          </span>
-          <span className="items-start text-black">Back</span>
-        </Button>
-      ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex gap-2 px-0 text-black hover:bg-transparent"
-          onClick={() => setStep(1)}
-        >
-          <span className="material-symbols-outlined text-black">
-            arrow_left_alt
-          </span>
-          <span className="items-start text-black">Back</span>
-        </Button>
-      )}
-
-      <div className="justify-center items-center text-center flex flex-col">
-        <h1 className="font-bold text-3xl text-black">Create Account</h1>
-        <p className="font-normal text-base text-black">
-          Join NutriScale Today!
+          NutriScale
+        </h1>
+        <p style={{ color: '#6b7280', marginTop: '5px' }}>
+          Your personalized health companion
         </p>
       </div>
 
-      {/* Step Indicator */}
-      <div className="flex justify-center items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="rounded-4xl w-10 h-10 flex items-center bg-black text-white justify-center">
-            1
-          </div>
-          <span className="text-black">Account Info</span>
-        </div>
-        <div
-          className={`w-16 h-1 rounded-2xl ${step === 2 ? 'bg-black' : 'bg-[#E5E7EB]'}`}
-        ></div>
-        <div className="flex items-center gap-2">
-          <div
-            className={`rounded-4xl w-10 h-10 flex items-center justify-center ${step === 2 ? 'bg-black text-white' : 'bg-[#E5E7EB] text-[#6A7282]'}`}
-          >
-            2
-          </div>
-          <span className={step === 2 ? 'text-black' : 'text-[#6A7282]'}>
-            Category
-          </span>
-        </div>
-      </div>
-
-      <Section
-        title={step === 1 ? 'Account Information' : 'Select Category'}
-        description={
-          step === 1
-            ? undefined
-            : 'Select the category that best describes your nutritional needs'
-        }
-        className="flex flex-col min-h-124 max-h-124 gap-3.5 justify-center align-middle"
+      {/* Card */}
+      <div
+        style={{
+          background: 'white',
+          padding: '40px',
+          borderRadius: '24px',
+          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+          width: '100%',
+          maxWidth: '400px',
+        }}
       >
-        {step === 1 ? (
-          <div className="flex flex-col gap-3.5">
-            {/* Full Name */}
-            <div className="flex flex-col">
-              <Label htmlFor="fullName" className="text-black font-medium">
-                Full Name
-              </Label>
-              <div className="relative flex items-center">
-                <span className="material-symbols-outlined absolute left-3 text-gray-400 text-xs">
-                  person
+        <h2
+          style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
+            marginBottom: '24px',
+            color: '#111827',
+          }}
+        >
+          {verificationPending ? 'Verifikasi Akun' : 'Create Account'}
+        </h2>
+
+        {verificationPending ? (
+          <div className="flex flex-col gap-6 justify-center items-center text-center">
+            <div className="bg-[#E8F4FF] p-6 rounded-full mb-2 flex items-center justify-center">
+              <Mail className="text-blue-500 w-12 h-12" />
+            </div>
+            <h3 className="text-xl font-bold text-black">Periksa Email Anda</h3>
+            <p className="text-black text-center text-sm leading-relaxed">
+              Kami telah mengirimkan tautan verifikasi ke email <br />
+              <strong className="text-blue-600">
+                {registerData.email}
+              </strong>. <br />
+              Silakan periksa kotak masuk atau folder spam Anda.
+            </p>
+
+            <div className="bg-[#FFF4E8] border border-[#FFE8E8] text-[#D97706] p-4 rounded-xl w-full flex items-start gap-4 shadow-sm mt-2">
+              <div className="text-xs flex flex-col text-left gap-1">
+                <strong className="text-sm">Status: Menunggu Verifikasi</strong>
+                <span>
+                  Halaman ini akan otomatis dialihkan ke Beranda apabila
+                  verifikasi berhasil, atau Anda dapat melanjutkan dengan masuk.
                 </span>
-                <Input
-                  type="text"
-                  required
-                  id="fullName"
-                  value={registerData.fullName}
-                  onChange={handleChange}
-                  placeholder="Enter your full name"
-                  className="w-full rounded-2xl border-[#E5E7EB] bg-[#F3F3F5] py-2 pl-11 pr-3 text-black focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                />
               </div>
             </div>
 
-            {/* Email */}
-            <div className="flex flex-col">
-              <Label htmlFor="email" className="text-black font-medium">
-                Email
-              </Label>
-              <div className="relative flex items-center">
-                <span className="material-symbols-outlined absolute left-3 text-gray-400 text-xs">
-                  mail
-                </span>
-                <Input
-                  type="email"
-                  required
-                  id="email"
-                  value={registerData.email}
-                  onChange={handleChange}
-                  placeholder="your.email@example.com"
-                  className="w-full rounded-2xl border-[#E5E7EB] bg-[#F3F3F5] py-2 pl-11 pr-3 text-black focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col">
-                <Label className="text-black font-medium" htmlFor="password">
-                  Password
-                </Label>
-                <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-3 text-gray-400 pointer-events-none text-xs">
-                    lock
-                  </span>
+            <Button
+              onClick={() => router.push('/login')}
+              variant="outline"
+              className="w-full mt-2 font-bold border-2 border-slate-200 rounded-xl py-6 hover:bg-gray-50"
+            >
+              Menuju Halaman Login
+            </Button>
+          </div>
+        ) : (
+          <>
+            <form
+              onSubmit={handleRegister}
+              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+            >
+              {/* Full Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
-                    type={showPassword ? 'text' : 'password'}
+                    type="text"
+                    required
+                    id="fullName"
+                    value={registerData.fullName}
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
+                    className="pl-10 py-6 rounded-xl bg-gray-50 text-black"
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    type="email"
+                    required
+                    id="email"
+                    value={registerData.email}
+                    onChange={handleChange}
+                    placeholder="your.email@example.com"
+                    className="pl-10 py-6 rounded-xl bg-gray-50 text-black"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
                     id="password"
-                    className="w-full rounded-2xl border-[#E5E7EB] bg-[#F3F3F5] py-2 pl-11 pr-11 text-black"
-                    placeholder="Create a strong password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    placeholder="••••••••"
                     value={registerData.password}
                     onChange={handleChange}
+                    className="pl-10 pr-10 py-6 rounded-xl bg-gray-50 text-black"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 flex items-center justify-center p-0 border-none bg-transparent outline-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-[20px] leading-none block">
-                      {showPassword ? 'visibility_off' : 'visibility'}
-                    </span>
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <Eye className="w-5 h-5 text-gray-500" />
+                    )}
                   </button>
                 </div>
               </div>
 
               {/* Confirm Password */}
-              <div className="flex flex-col">
-                <Label
-                  className="text-black font-medium"
-                  htmlFor="confirmPassword"
-                >
-                  Confirm Password
-                </Label>
-                <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-3 text-gray-400 pointer-events-none text-xs">
-                    lock
-                  </span>
+              <div className="grid gap-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
-                    type={showConfirmPassword ? 'text' : 'password'}
                     id="confirmPassword"
-                    className="w-full rounded-2xl border-[#E5E7EB] bg-[#F3F3F5] py-2 pl-11 pr-11 text-black"
-                    placeholder="Confirm your password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    placeholder="••••••••"
                     value={registerData.confirmPassword}
                     onChange={handleChange}
+                    className="pl-10 pr-10 py-6 rounded-xl bg-gray-50 text-black"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 flex items-center justify-center p-0 border-none bg-transparent outline-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-[20px] leading-none block">
-                      {showConfirmPassword ? 'visibility_off' : 'visibility'}
-                    </span>
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <Eye className="w-5 h-5 text-gray-500" />
+                    )}
                   </button>
                 </div>
               </div>
+
+              {/* Error Message */}
+              {errorMsg && (
+                <p className="text-red-500 text-sm text-center">{errorMsg}</p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full mt-2 py-6 text-base rounded-xl disabled:opacity-60"
+              >
+                {isLoading ? 'Memproses...' : 'Sign Up'}
+              </Button>
+            </form>
+
+            <div
+              style={{
+                margin: '24px 0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
+              <div
+                style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}
+              ></div>
+              <span style={{ fontSize: '12px', color: '#9ca3af' }}>
+                Or continue with
+              </span>
+              <div
+                style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}
+              ></div>
             </div>
 
-            {/* Error Message */}
-            {errorMsg && (
-              <p className="text-red-500 text-sm text-center">{errorMsg}</p>
-            )}
-
-            <Button
-              onClick={handleNextStep}
-              disabled={isLoading}
-              className="rounded-2xl py-2 font-bold disabled:opacity-60"
-            >
-              {isLoading ? 'Memproses...' : 'Next Step'}
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                {
-                  id: 'ANAK_BALITA',
-                  label: 'Anak Balita',
-                  icon: '👶',
-                  color: '#FFE8E8',
-                  desc: 'Nutrition for children under 5 years',
-                },
-                {
-                  id: 'IBU_HAMIL',
-                  label: 'Ibu Hamil',
-                  icon: '🤰',
-                  color: '#E8F4FF',
-                  desc: 'Nutrition for pregnant women',
-                },
-                {
-                  id: 'PASCA_OPERASI',
-                  label: 'Pasca Operasi',
-                  icon: '🏥',
-                  color: '#FFF4E8',
-                  desc: 'Post-operative recovery nutrition',
-                },
-                {
-                  id: 'UMUM',
-                  label: 'Umum',
-                  icon: '🧍',
-                  color: '#E1EEDD',
-                  desc: 'General health & wellness',
-                },
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`p-4 border-2 rounded-2xl flex flex-row items-left gap-2 transition-all ${selectedCategory === cat.id ? 'border-black' : 'border-[#E5E7EB]'}`}
-                  style={{ backgroundColor: cat.color }}
-                >
-                  <span className="text-4xl">{cat.icon}</span>
-                  <div className="flex flex-col gap-1 text-left">
-                    <span className="font-bold text-lg text-black">
-                      {cat.label}
-                    </span>
-                    <span className="text-sm text-gray-500">{cat.desc}</span>
-                  </div>
-                </button>
-              ))}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 rounded-xl py-6"
+                onClick={async () => {
+                  await authClient.signIn.social({
+                    provider: 'google',
+                    callbackURL: '/',
+                  });
+                }}
+              >
+                <span style={{ fontWeight: 'bold', marginRight: '4px' }}>
+                  G
+                </span>{' '}
+                Google
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 rounded-xl py-6"
+                disabled
+              >
+                <span style={{ fontSize: '18px', marginRight: '4px' }}></span>{' '}
+                Apple
+              </Button>
             </div>
 
-            <Button
-              disabled={!selectedCategory}
-              onClick={handleCompleteRegistration}
-              className="rounded-2xl py-2 font-bold disabled:bg-gray-300"
+            <p
+              style={{
+                marginTop: '24px',
+                fontSize: '14px',
+                color: '#6b7280',
+                textAlign: 'center',
+              }}
             >
-              Complete Registration
-            </Button>
+              Already have an account?{' '}
+              <Link
+                href="/login"
+                style={{
+                  color: '#3b82f6',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                }}
+              >
+                Sign in
+              </Link>
+            </p>
           </>
         )}
-
-        <div className="flex flex-row justify-center gap-1">
-          <span className="text-black">Already have an account?</span>
-          <Link href="/login" className="text-blue-500">
-            Sign In
-          </Link>
-        </div>
-      </Section>
+      </div>
     </div>
   );
 }
