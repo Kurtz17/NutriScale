@@ -155,7 +155,7 @@ export default function LoginPage() {
             variant="outline"
             className="flex-1 rounded-xl py-6"
             onClick={() =>
-              alert('Fitur Login Google akan hadir di Sprint berikutnya!')
+              alert('Fitur Login Google akan hadir di berikutnya!')
             }
           >
             <span style={{ fontWeight: 'bold', marginRight: '4px' }}>G</span>{' '}
@@ -166,9 +166,7 @@ export default function LoginPage() {
             type="button"
             variant="outline"
             className="flex-1 rounded-xl py-6"
-            onClick={() =>
-              alert('Fitur Login Apple akan hadir di Sprint berikutnya!')
-            }
+            onClick={() => alert('Fitur Login Apple akan hadir di berikutnya!')}
           >
             <span style={{ fontSize: '18px', marginRight: '4px' }}></span>{' '}
             Apple
