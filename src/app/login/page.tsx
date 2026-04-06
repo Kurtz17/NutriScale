@@ -1,5 +1,9 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -65,105 +69,42 @@ export default function LoginPage() {
           style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
         >
           {/* Email Field */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginBottom: '6px',
-                color: '#374151',
-              }}
-            >
-              Email Address
-            </label>
-            <div style={{ position: 'relative' }}>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#9ca3af',
-                }}
-              >
-                ✉️
-              </span>
-              <input
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email Address</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                id="email"
                 type="email"
                 placeholder="your.email@example.com"
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px 12px 12px 40px',
-                  borderRadius: '12px',
-                  border: '1px solid #e5e7eb',
-                  backgroundColor: '#f9fafb',
-                  color: '#1a1a1a',
-                  fontSize: '14px',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                }}
+                className="pl-10 py-6 rounded-xl bg-gray-50"
               />
             </div>
           </div>
 
           {/* Password Field */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginBottom: '6px',
-                color: '#374151',
-              }}
-            >
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#9ca3af',
-                }}
-              >
-                🔒
-              </span>
-              <input
+          <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px 40px 12px 40px',
-                  borderRadius: '12px',
-                  border: '1px solid #e5e7eb',
-                  backgroundColor: '#f9fafb',
-                  color: '#1a1a1a',
-                  fontSize: '14px',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                }}
+                className="pl-10 pr-10 py-6 rounded-xl bg-gray-50"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-base"
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Eye className="w-5 h-5 text-gray-500" />
+                )}
               </button>
             </div>
           </div>
@@ -181,22 +122,12 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <button
+          <Button
             type="submit"
-            style={{
-              padding: '14px',
-              backgroundColor: '#1a1a1a',
-              color: '#fff',
-              borderRadius: '12px',
-              border: 'none',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '16px',
-              marginTop: '8px',
-            }}
+            className="w-full mt-2 py-6 text-base rounded-xl"
           >
             Sign In
-          </button>
+          </Button>
         </form>
 
         <div
@@ -219,42 +150,29 @@ export default function LoginPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            style={{
-              flex: 1,
-              padding: '10px',
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb',
-              backgroundColor: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 rounded-xl py-6"
+            onClick={() =>
+              alert('Fitur Login Google akan hadir di Sprint berikutnya!')
+            }
           >
-            <span style={{ fontWeight: 'bold' }}>G</span> Google
-          </button>
-          <button
-            style={{
-              flex: 1,
-              padding: '10px',
-              borderRadius: '12px',
-              border: '1px solid #e5e7eb',
-              backgroundColor: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}
+            <span style={{ fontWeight: 'bold', marginRight: '4px' }}>G</span>{' '}
+            Google
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 rounded-xl py-6"
+            onClick={() =>
+              alert('Fitur Login Apple akan hadir di Sprint berikutnya!')
+            }
           >
-            <span style={{ fontSize: '18px' }}></span> Apple
-          </button>
+            <span style={{ fontSize: '18px', marginRight: '4px' }}></span>{' '}
+            Apple
+          </Button>
         </div>
 
         <p

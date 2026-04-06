@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 
 export default function RecoveryPage() {
@@ -40,6 +42,10 @@ export default function RecoveryPage() {
 
       {/* Form Section */}
       <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          alert('Link reset password telah dikirim ke email anda!');
+        }}
         style={{
           width: '100%',
           maxWidth: '600px',
@@ -51,14 +57,17 @@ export default function RecoveryPage() {
         <input
           type="email"
           placeholder="Email"
+          required
           style={{
             width: '100%',
             padding: '20px 24px',
             borderRadius: '16px',
             border: '1px solid #d1d5db',
             backgroundColor: '#f3f4f6',
+            color: '#1a1a1a',
             fontSize: '16px',
             boxSizing: 'border-box',
+            outline: 'none',
           }}
         />
 
