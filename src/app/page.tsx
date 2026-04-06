@@ -1,65 +1,334 @@
-import Image from 'next/image';
+'use client';
+import {
+  Activity,
+  ArrowLeft,
+  ArrowRight,
+  Brain,
+  CheckCircle,
+  Heart,
+  ShieldCheck,
+  ShoppingCart,
+  Star,
+  Stethoscope,
+  Target,
+  TrendingUp,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-export default function Home() {
+export default function LandingPage() {
+  const router = useRouter();
+
+  const features = [
+    {
+      icon: Brain,
+      title: 'Analisis Berbasis AI',
+      description:
+        'Algoritma canggih menghitung WHO Z-Score, BMI, dan kebutuhan nutrisi personal Anda.',
+      color: 'bg-blue-500',
+    },
+    {
+      icon: Target,
+      title: 'Meal Plan Personal',
+      description:
+        'Dapatkan rekomendasi menu makan harian yang dikurasi khusus oleh sistem AI.',
+      color: 'bg-green-600',
+    },
+    {
+      icon: ShoppingCart,
+      title: 'Marketplace Sehat',
+      description:
+        'Belanja bahan makanan dengan label transparansi nutrisi dan peringatan risiko.',
+      color: 'bg-orange-500',
+    },
+    {
+      icon: Activity,
+      title: 'Pelacakan Real-Time',
+      description:
+        'Pantau perkembangan metrik kesehatan dan asupan kalori harian secara berkelanjutan.',
+      color: 'bg-red-500',
+    },
+  ];
+
+  const categories = [
+    {
+      id: 'ANAK_BALITA',
+      icon: '👶',
+      title: 'Anak Balita',
+      description:
+        'Pemantauan tumbuh kembang berbasis Z-Score WHO untuk mencegah stunting.',
+      color: 'bg-[#FFE8E8]',
+      borderColor: 'border-[#FF6B6B]',
+    },
+    {
+      id: 'IBU_HAMIL',
+      icon: '🤰',
+      title: 'Ibu Hamil',
+      description:
+        'Panduan nutrisi spesifik untuk kesehatan janin dan pencegahan anemia.',
+      color: 'bg-[#E8F4FF]',
+      borderColor: 'border-[#4A90E2]',
+    },
+    {
+      id: 'PASCA_OPERASI',
+      icon: '🏥',
+      title: 'Pasien Pasca-Operasi',
+      description:
+        'Optimasi diet tinggi protein untuk mempercepat pemulihan jaringan tubuh.',
+      color: 'bg-[#FFF4E8]',
+      borderColor: 'border-[#FFA726]',
+    },
+    {
+      id: 'UMUM',
+      icon: '👤',
+      title: 'Umum',
+      description:
+        'Manajemen berat badan ideal dan edukasi gaya hidup sehat masyarakat.',
+      color: 'bg-[#E1EEDD]',
+      borderColor: 'border-[#7CB342]',
+    },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen bg-white font-sans text-[#1A1A1B]">
+      {/* Navigation */}
+      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            <div
+              className="flex items-center space-x-3 cursor-pointer"
+              onClick={() => router.push('/')}
             >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{' '}
-            center.
+              <span className="text-2xl font-black tracking-tighter text-[#1A1A1B]">
+                NutriScale
+              </span>
+            </div>
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => router.push('/login')}
+                className="font-bold hover:text-green-700 transition-colors"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => router.push('/register')}
+                className="bg-[#1A1A1B] text-white px-6 py-3 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-linear-to-b from-[#E1EEDD] to-white py-24 px-4">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 font-bold text-xs mb-8 border border-blue-100 uppercase tracking-widest">
+              <ShieldCheck className="w-4 h-4" /> Powered by AI & WHO Standards
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black leading-[1.1] mb-8">
+              Solusi Cerdas Kelola{' '}
+              <span className="text-green-700">Gizi & Kesehatan</span>
+            </h1>
+            <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto">
+              Bantuan nutrisi personal berbasis medis untuk setiap fase
+              kehidupan Anda. Mulai dari kehamilan hingga pemulihan
+              pasca-operasi .
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => router.push('/register')}
+                className="bg-[#1A1A1B] text-white px-10 py-5 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-xl active:scale-95"
+              >
+                Mulai Analisis Gratis <ArrowRight className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => router.push('/login')}
+                className="bg-white border-2 border-[#1A1A1B] px-10 py-5 rounded-2xl text-lg font-bold hover:bg-gray-50 transition-all active:scale-95"
+              >
+                Sign In
+              </button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="mt-16 flex flex-wrap justify-center gap-8 text-sm font-semibold text-gray-500">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" /> WHO Certified
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" /> AI Driven
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" /> Medical
+                Approved
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black mb-4">
+              Kategori Nutrisi Khusus
+            </h2>
+            <p className="text-gray-500 text-lg">
+              Pilih profil yang sesuai dengan kondisi klinis Anda
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                onClick={() => router.push('/register')}
+                className={`${cat.color} border-2 ${cat.borderColor} p-8 rounded-4xl shadow-sm hover:shadow-2xl transition-all cursor-pointer hover:-translate-y-2 group`}
+              >
+                <div className="text-6xl mb-6 group-hover:scale-110 transition-transform">
+                  {cat.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-3">{cat.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {cat.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div className="space-y-8">
+              <h2 className="text-5xl font-black leading-tight">
+                Kenapa Memilih{' '}
+                <span className="text-green-700">NutriScale?</span>
+              </h2>
+              <p className="text-xl text-gray-500 leading-relaxed">
+                Kami menggabungkan keahlian medis dengan teknologi AI untuk
+                memberikan panduan gizi paling akurat yang tersedia di pasar.
+              </p>
+
+              <div className="grid gap-6">
+                {[
+                  'Asesmen kesehatan personal terperinci ',
+                  'Target nutrisi otomatis standar WHO ',
+                  'Rekomendasi Meal Plan cerdas ',
+                  'Labeling produk transparan ',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-4 group">
+                    <div className="w-8 h-8 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-bold group-hover:bg-green-600 group-hover:text-white transition-colors">
+                      <CheckCircle className="w-5 h-5" />
+                    </div>
+                    <span className="font-bold text-gray-700">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-6">
+              <div className="p-8 bg-blue-50 rounded-4xl border border-blue-100 relative overflow-hidden">
+                <TrendingUp className="w-12 h-12 text-blue-500 mb-4" />
+                <h4 className="text-2xl font-bold mb-2">Hasil Nyata</h4>
+                <p className="text-gray-600">
+                  Pengguna kami melihat peningkatan metrik kesehatan yang
+                  terukur dalam bulan pertama.
+                </p>
+              </div>
+              <div className="p-8 bg-green-50 rounded-4xl border border-green-100">
+                <Stethoscope className="w-12 h-12 text-green-600 mb-4" />
+                <h4 className="text-2xl font-bold mb-2">Pendekatan Medis</h4>
+                <p className="text-gray-600">
+                  Seluruh algoritma dikembangkan berdasarkan pedoman gizi klinis
+                  resmi.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 px-4">
+        <div className="max-w-5xl mx-auto bg-[#1A1A1B] rounded-[3rem] p-12 md:p-20 text-center text-white relative shadow-2xl overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-green-900/20 to-transparent pointer-events-none"></div>
+          <h2 className="text-4xl md:text-6xl font-black mb-8 relative z-10">
+            Siap Transformasi Kesehatan Anda?
+          </h2>
+          <p className="text-xl text-gray-400 mb-12 relative z-10">
+            Bergabunglah dengan ribuan pengguna yang sudah mencapai target
+            nutrisinya bersama NutriScale.
           </p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
+            <button
+              onClick={() => router.push('/register')}
+              className="bg-white text-[#1A1A1B] px-12 py-5 rounded-2xl text-lg font-bold hover:bg-gray-100 transition-all active:scale-95"
+            >
+              Mulai Sekarang
+            </button>
+            <button
+              onClick={() => router.push('/login')}
+              className="bg-transparent border-2 border-white text-white px-12 py-5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all active:scale-95"
+            >
+              Hubungi Spesialis
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-100 py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div className="col-span-1 md:col-span-1">
+              <div className="flex items-center space-x-3 mb-6">
+                <span className="text-xl font-black tracking-tight">
+                  NutriScale
+                </span>
+              </div>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                Platform cerdas pengelolaan gizi personal untuk masyarakat
+                Indonesia. Berkontribusi pada SDGs poin 2: Zero Hunger.
+              </p>
+            </div>
+            {['Produk', 'Perusahaan', 'Legal'].map((title, i) => (
+              <div key={i}>
+                <h4 className="font-black text-lg mb-6">{title}</h4>
+                <ul className="space-y-4 text-gray-500 text-sm">
+                  <li>
+                    <a href="#" className="hover:text-black transition-colors">
+                      Layanan AI
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-black transition-colors">
+                      Marketplace
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-black transition-colors">
+                      Tentang Kami
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="hover:text-black transition-colors">
+                      Kebijakan Privasi
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div className="mt-20 pt-8 border-t border-gray-50 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
+            © 2026 NutriScale. Universitas Padjadjaran Informatika.
+          </div>
         </div>
-      </main>
+      </footer>
     </div>
   );
 }
