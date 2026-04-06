@@ -1,5 +1,9 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RecoveryPage() {
@@ -48,58 +52,44 @@ export default function RecoveryPage() {
         }}
         style={{
           width: '100%',
-          maxWidth: '600px',
+          maxWidth: '400px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '24px',
+          gap: '20px',
         }}
       >
-        <input
-          type="email"
-          placeholder="Email"
-          required
-          style={{
-            width: '100%',
-            padding: '20px 24px',
-            borderRadius: '16px',
-            border: '1px solid #d1d5db',
-            backgroundColor: '#f3f4f6',
-            color: '#1a1a1a',
-            fontSize: '16px',
-            boxSizing: 'border-box',
-            outline: 'none',
-          }}
-        />
+        {/* Bagian Email Field */}
+        <div className="grid gap-2 text-left w-full">
+          <Label htmlFor="email" className="text-sm font-medium mb-1">
+            Email Address
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your registered email"
+              required
+              className="pl-10 py-6 rounded-xl bg-gray-50 border-gray-300"
+            />
+          </div>
+        </div>
 
-        <button
+        <Button
           type="submit"
-          style={{
-            width: '100%',
-            padding: '18px',
-            backgroundColor: '#1a1a1a',
-            color: '#fff',
-            borderRadius: '16px',
-            border: 'none',
-            fontWeight: '600',
-            cursor: 'pointer',
-            fontSize: '18px',
-          }}
+          className="w-full py-6 text-base font-bold rounded-xl bg-black hover:bg-gray-800"
         >
           Kirim
-        </button>
+        </Button>
       </form>
 
       {/* Optional: Link back to login if you want to be extra helpful */}
       <Link
         href="/login"
-        style={{
-          color: '#1a1a1a',
-          textDecoration: 'none',
-          fontSize: '14px',
-          fontWeight: '500',
-        }}
+        className="mt-8 flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black transition-colors"
+        style={{ textDecoration: 'none' }}
       >
-        ← Kembali ke Login
+        <ArrowLeft className="w-4 h-4" /> Kembali ke Login
       </Link>
     </div>
   );
