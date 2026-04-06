@@ -1,4 +1,6 @@
 'use client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { authClient } from '@/lib/auth-client';
 import {
   Activity,
   ArrowLeft,
@@ -6,17 +8,47 @@ import {
   Brain,
   CheckCircle,
   Heart,
+  LogOut,
   ShieldCheck,
   ShoppingCart,
   Star,
   Stethoscope,
   Target,
   TrendingUp,
+  User,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 export default function LandingPage() {
   const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          setIsDropdownOpen(false);
+          router.refresh(); // Segarkan halaman untuk menghapus sisa state
+        },
+      },
+    });
+  };
 
   const features = [
     {
@@ -102,19 +134,78 @@ export default function LandingPage() {
                 NutriScale
               </span>
             </div>
-            <div className="flex items-center space-x-6">
-              <button
-                onClick={() => router.push('/login')}
-                className="font-bold hover:text-green-700 transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => router.push('/register')}
-                className="bg-[#1A1A1B] text-white px-6 py-3 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95"
-              >
-                Get Started
-              </button>
+            <div
+              className="flex items-center space-x-6 relative"
+              ref={dropdownRef}
+            >
+              {isPending ? (
+                <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse"></div>
+              ) : session ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 focus:outline-none"
+                  >
+                    <Avatar className="w-10 h-10 border-2 border-white shadow-sm ring-2 ring-transparent hover:ring-green-500 transition-all">
+                      <AvatarImage
+                        src={session.user.image || '/avatar.jpg'}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-green-100 text-green-700 font-bold">
+                        {session.user.name.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+
+                  {/* Pop Up Dropdown */}
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 p-2 z-50 transform origin-top-right transition-all">
+                      <div className="px-3 py-2 border-b border-slate-100 mb-2">
+                        <p className="font-bold text-sm text-slate-900 truncate">
+                          {session.user.name}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate">
+                          {session.user.email}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          router.push('/profile');
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 font-medium hover:bg-slate-50 rounded-xl transition-colors text-left"
+                      >
+                        <User className="w-4 h-4 text-slate-500" />
+                        Profile Settings
+                      </button>
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 font-medium hover:bg-red-50 rounded-xl transition-colors text-left"
+                      >
+                        <LogOut className="w-4 h-4 text-red-500" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push('/login')}
+                    className="font-bold hover:text-green-700 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => router.push('/register')}
+                    className="bg-[#1A1A1B] text-white px-6 py-3 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
