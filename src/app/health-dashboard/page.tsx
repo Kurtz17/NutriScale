@@ -7,9 +7,40 @@ import HealthStatus from '@/components/health-dashboard/components/health-status
 import HealthTip from '@/components/health-dashboard/components/health-tip';
 import MealSection from '@/components/health-dashboard/components/meal-section';
 import StatCard from '@/components/health-dashboard/components/stat-card';
-import { stats } from '@/components/health-dashboard/data/dummy-data';
+import { Meal, Stat } from '@/components/health-dashboard/types';
+import { useEffect, useState } from 'react';
 
 export default function HealthDashboardPage() {
+  const [stats, setStats] = useState<Stat[]>([]);
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/health-dashboard');
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data.stats || []);
+          setMeals(data.meals || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#E6EFE3]">
+        Loading dashboard...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#E6EFE3] px-6 md:px-10 py-8">
       <div className="max-w-7xl mx-auto">
@@ -43,7 +74,7 @@ export default function HealthDashboardPage() {
 
         {/* MEALS */}
         <div className="mb-8">
-          <MealSection />
+          <MealSection meals={meals} />
         </div>
 
         {/* HEALTH TIP */}

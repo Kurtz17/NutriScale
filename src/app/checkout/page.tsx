@@ -1,5 +1,5 @@
 'use client';
-import { CartItem } from '@/types/marketplace';
+import { useCartStore } from '@/lib/store/useCartStore';
 import {
   ChevronLeft,
   Info,
@@ -8,32 +8,21 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [hasHydrated, setHasHydrated] = useState(false);
+  const { cart, fetchCart } = useCartStore();
 
   useEffect(() => {
-    const savedCart = localStorage.getItem('nutriscale-cart');
+    fetchCart();
+  }, [fetchCart]);
 
-    setTimeout(() => {
-      if (savedCart) {
-        setItems(JSON.parse(savedCart));
-      }
-      setHasHydrated(true);
-    }, 0);
-  }, []);
-
-  if (!hasHydrated) {
-    return null; // mungkin nanti ada spinner loading kecil
-  }
-  const subtotal = items.reduce(
+  const subtotal = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0,
   );
-  const totalCalories = items.reduce(
+  const totalCalories = cart.reduce(
     (acc, item) => acc + item.calories * item.quantity,
     0,
   );
@@ -51,7 +40,7 @@ export default function CheckoutPage() {
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* KIRI: Alamat & Pembayaran */}
+        {/* KIRI: Daftar Pesanan & Alamat */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-50">
             <div className="flex items-center gap-3 mb-6">
@@ -64,8 +53,8 @@ export default function CheckoutPage() {
             </div>
 
             <div className="space-y-4">
-              {items.length > 0 ? (
-                items.map((item) => (
+              {cart.length > 0 ? (
+                cart.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl"
@@ -93,11 +82,12 @@ export default function CheckoutPage() {
                 ))
               ) : (
                 <p className="text-center text-gray-400 py-4 italic">
-                  Belum ada item pilihan.
+                  Keranjang kosong. Silahkan tambahkan produk dari marketplace.
                 </p>
               )}
             </div>
           </div>
+
           <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-50">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-[#E1EEDD] rounded-2xl">
@@ -127,6 +117,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
+        {/* KANAN: Ringkasan */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           <div className="bg-[#1A1A1B] text-white rounded-[2rem] p-8 shadow-xl">
             <div className="flex items-center gap-2 mb-4 text-[#7CB342]">
@@ -156,7 +147,7 @@ export default function CheckoutPage() {
 
             <div className="space-y-3">
               <div className="flex justify-between text-sm font-medium text-gray-400">
-                <span>Subtotal ({items.length} item)</span>
+                <span>Subtotal ({cart.length} item)</span>
                 <span>Rp {subtotal.toLocaleString('id-ID')}</span>
               </div>
               <div className="flex justify-between text-sm font-medium text-gray-400">

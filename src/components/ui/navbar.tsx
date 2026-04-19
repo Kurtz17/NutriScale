@@ -1,13 +1,7 @@
 'use client';
 import { authClient } from '@/lib/auth-client';
-import {
-  LayoutDashboard,
-  LogOut,
-  Settings,
-  ShoppingCart,
-  Store,
-  User,
-} from 'lucide-react';
+import { useCartStore } from '@/lib/store/useCartStore';
+import { LogOut, ShoppingCart, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -19,6 +13,13 @@ export default function Navbar() {
   const isLoggedIn = !!session?.user;
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { cart, fetchCart } = useCartStore();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchCart();
+    }
+  }, [isLoggedIn, fetchCart]);
 
   const handleLogout = async () => {
     await authClient.signOut();
@@ -99,9 +100,11 @@ export default function Navbar() {
                   className="relative p-2.5 bg-gray-50 rounded-2xl group"
                 >
                   <ShoppingCart className="w-5 h-5 text-gray-600 group-hover:text-black" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
-                    0
-                  </span>
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                      {cart.reduce((total, item) => total + item.quantity, 0)}
+                    </span>
+                  )}
                 </button>
 
                 {/* Profil Dropdown */}

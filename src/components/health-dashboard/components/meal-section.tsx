@@ -1,9 +1,9 @@
 'use client';
 
-import { meals } from '../data/dummy-data';
+import { Meal } from '../types';
 import MealCard from './meal-card';
 
-export default function MealSection() {
+export default function MealSection({ meals }: { meals: Meal[] }) {
   return (
     <div className="w-full">
       {/* HEADER */}

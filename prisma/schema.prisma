@@ -148,6 +148,8 @@ model RiwayatAnalisis {
 model ProdukMakanan {
   id             String            @id @map("produk_id")
   namaProduk     String?           @map("nama_produk")
+  kategori       String?           @map("kategori")
+  gambar         String?           @map("gambar")
   harga          Decimal?          @db.Decimal(10, 2)
   deskripsi      String?
   nilaiGizi      Json?             @map("nilai_gizi")
