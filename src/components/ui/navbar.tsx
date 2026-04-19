@@ -44,33 +44,35 @@ export default function Navbar() {
           </div>
 
           {/* Menu Utama (Tengah) */}
-          <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => router.push('/')}
-              className="text-gray-600 hover:text-black font-semibold transition-colors"
-            >
-              Home
-            </button>
-            <button
-              onClick={() => router.push('/marketplace')}
-              className="text-gray-600 hover:text-black font-semibold transition-colors"
-            >
-              Marketplace
-            </button>
-            <button
-              disabled
-              onClick={() => router.push('/smart-counter')}
-              className="text-gray-600 hover:text-black font-semibold transition-colors"
-            >
-              Smart Counter
-            </button>
-            <button
-              onClick={() => router.push('/health-dashboard')}
-              className="text-gray-600 hover:text-black font-semibold transition-colors"
-            >
-              Dashboard
-            </button>
-          </div>
+          {isLoggedIn && (
+            <div className="hidden md:flex items-center space-x-8">
+              <button
+                onClick={() => router.push('/')}
+                className="text-gray-600 hover:text-black font-semibold transition-colors"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => router.push('/marketplace')}
+                className="text-gray-600 hover:text-black font-semibold transition-colors"
+              >
+                Marketplace
+              </button>
+              <button
+                disabled
+                onClick={() => router.push('/smart-counter')}
+                className="text-gray-600 hover:text-black font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Smart Counter
+              </button>
+              <button
+                onClick={() => router.push('/health-dashboard')}
+                className="text-gray-600 hover:text-black font-semibold transition-colors"
+              >
+                Dashboard
+              </button>
+            </div>
+          )}
 
           {/* Navigasi & Auth */}
           <div className="flex items-center space-x-6">
@@ -93,7 +95,7 @@ export default function Navbar() {
               <div className="flex items-center gap-5" ref={dropdownRef}>
                 {/* Tombol Keranjang (Tugas Arya) */}
                 <button
-                  onClick={() => router.push('/cart')}
+                  onClick={() => router.push('/marketplace')}
                   className="relative p-2.5 bg-gray-50 rounded-2xl group"
                 >
                   <ShoppingCart className="w-5 h-5 text-gray-600 group-hover:text-black" />

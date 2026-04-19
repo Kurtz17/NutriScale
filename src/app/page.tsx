@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from 'react';
 export default function LandingPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
+  const isLoggedIn = !!session?.user;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -140,17 +141,22 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => router.push('/register')}
-                className="bg-[#1A1A1B] text-white px-10 py-5 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-xl active:scale-95"
+                onClick={() =>
+                  router.push(isLoggedIn ? '/smart-counter' : '/register')
+                }
+                disabled={isLoggedIn}
+                className="bg-[#1A1A1B] text-white px-10 py-5 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Mulai Analisis Gratis <ArrowRight className="w-5 h-5" />
               </button>
-              <button
-                onClick={() => router.push('/login')}
-                className="bg-white border-2 border-[#1A1A1B] px-10 py-5 rounded-2xl text-lg font-bold hover:bg-gray-50 transition-all active:scale-95"
-              >
-                Sign In
-              </button>
+              {!isLoggedIn && (
+                <button
+                  onClick={() => router.push('/login')}
+                  className="bg-white border-2 border-[#1A1A1B] px-10 py-5 rounded-2xl text-lg font-bold hover:bg-gray-50 transition-all active:scale-95"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
 
             {/* Trust Indicators */}
@@ -268,14 +274,19 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
             <button
-              onClick={() => router.push('/register')}
+              onClick={() =>
+                router.push(isLoggedIn ? '/health-dashboard' : '/register')
+              }
               className="bg-white text-[#1A1A1B] px-12 py-5 rounded-2xl text-lg font-bold hover:bg-gray-100 transition-all active:scale-95"
             >
               Mulai Sekarang
             </button>
             <button
-              onClick={() => router.push('/login')}
-              className="bg-transparent border-2 border-white text-white px-12 py-5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all active:scale-95"
+              onClick={() =>
+                router.push(isLoggedIn ? '/smart-counter' : '/login')
+              }
+              disabled={isLoggedIn}
+              className="bg-transparent border-2 border-white text-white px-12 py-5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Hubungi Spesialis
             </button>
