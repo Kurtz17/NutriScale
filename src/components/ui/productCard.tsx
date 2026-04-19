@@ -5,7 +5,7 @@ import React from 'react';
 
 // Tambah export di sini biar bisa dibaca sama page.tsx
 export interface Product {
-  id: number;
+  id: string | number;
   name: string;
   category: string;
   image: string;
@@ -95,72 +95,4 @@ const ProductCard: React.FC<{
 
 export default ProductCard;
 
-// Data yang sempet dihilangin Copilot kita balikin ke sini
-export const mockProducts: Product[] = [
-  {
-    id: 1,
-    name: 'Organic Brown Rice',
-    category: 'Grains',
-    image: '🌾',
-    badges: { healthSafe: true, aiRecommended: true },
-    tags: ['Low Sodium', 'Whole Grain'],
-    calories: 110,
-    protein: 3,
-    price: 25000,
-  },
-  {
-    id: 2,
-    name: 'Fresh Chicken Breast',
-    category: 'Meat',
-    image: '🍗',
-    badges: { healthSafe: true, aiRecommended: false },
-    tags: ['High Protein'],
-    calories: 165,
-    protein: 31,
-    price: 45000,
-  },
-  {
-    id: 3,
-    name: 'Greek Yogurt',
-    category: 'Dairy',
-    image: '🥛',
-    badges: { healthSafe: true, aiRecommended: true },
-    tags: ['Low Fat', 'Probiotic'],
-    calories: 59,
-    protein: 10,
-    price: 20000,
-  },
-  {
-    id: 4,
-    name: 'Salmon Fillet',
-    category: 'Seafood',
-    image: '🐟',
-    badges: { healthSafe: true, aiRecommended: false },
-    tags: ['Omega-3', 'High Protein'],
-    calories: 208,
-    protein: 22,
-    price: 75000,
-  },
-  {
-    id: 5,
-    name: 'Sweet Potato',
-    category: 'Vegetables',
-    image: '🍠',
-    badges: { healthSafe: true, aiRecommended: false },
-    tags: ['High Fiber', 'Low Fat'],
-    calories: 86,
-    protein: 2,
-    price: 15000,
-  },
-  {
-    id: 6,
-    name: 'Honey',
-    category: 'Sweeteners',
-    image: '🍯',
-    badges: { healthSafe: true, aiRecommended: true },
-    tags: ['Natural Sugar', 'High Sugar'],
-    calories: 64,
-    protein: 0,
-    price: 30000,
-  },
-];
+// Removed mockProducts as they are now fetched from the database

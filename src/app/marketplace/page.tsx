@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,66 +16,61 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import ProductCard, {
-  Product,
-  mockProducts,
-} from '@/components/ui/productCard';
+import ProductCard, { Product } from '@/components/ui/productCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useCartStore } from '@/lib/store/useCartStore';
 import { Inter } from 'next/font/google';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
 
-type CartItem = Product & {
-  quantity: number;
-};
-
 export default function MarketplacePage() {
   const router = useRouter();
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [hasHydrated, setHasHydrated] = useState(false);
+
+  // Zustand store
+  const { cart, addToCart, updateQuantity, removeFromCart, fetchCart } =
+    useCartStore();
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // State untuk Fitur Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  // Load data dari LocalStorage saat pertama kali render
+  // Load products and cart
   useEffect(() => {
-    const savedCart = localStorage.getItem('nutriscale-cart');
-    const timeout = setTimeout(() => {
-      if (savedCart) {
-        setCart(JSON.parse(savedCart));
+    const loadData = async () => {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data);
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setHasHydrated(true);
-    }, 0);
+    };
 
-    return () => clearTimeout(timeout);
-  }, []);
-
-  // Simpan ke LocalStorage tiap ada perubahan cart
-  useEffect(() => {
-    if (hasHydrated) {
-      if (cart.length > 0) {
-        localStorage.setItem('nutriscale-cart', JSON.stringify(cart));
-      } else {
-        localStorage.removeItem('nutriscale-cart');
-      }
-    }
-  }, [cart, hasHydrated]);
+    loadData();
+    fetchCart();
+  }, [fetchCart]);
 
   // Ambil daftar kategori unik
   const categories = useMemo(() => {
     const uniqueCategories = Array.from(
-      new Set(mockProducts.map((p) => p.category)),
+      new Set(products.map((p) => p.category)),
     );
     return ['All', ...uniqueCategories];
-  }, []);
+  }, [products]);
 
   // Logika Saringan Produk
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter((product) => {
+    return products.filter((product) => {
       const matchesSearch = product.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -84,43 +78,10 @@ export default function MarketplacePage() {
         selectedCategory === 'All' || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory]);
-
-  // Logika Keranjang (Tambah, Kurang, Hapus)
-  const handleAddToCart = (product: Product) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  const handleUpdateQuantity = (
-    productId: string | number,
-    quantity: number,
-  ) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === productId
-          ? { ...item, quantity: Math.max(1, quantity) }
-          : item,
-      ),
-    );
-  };
-
-  const handleRemoveFromCart = (productId: string | number) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
-  };
+  }, [products, searchQuery, selectedCategory]);
 
   const handleCheckout = () => {
     if (cart.length === 0) return alert('Keranjang masih kosong!');
-    localStorage.setItem('nutriscale-cart', JSON.stringify(cart));
     router.push('/checkout');
   };
 
@@ -133,10 +94,14 @@ export default function MarketplacePage() {
     (total, item) => total + item.price * item.quantity,
     0,
   );
-  const totalItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
-  // Mencegah hydration mismatch antara server dan client
-  if (!hasHydrated) return null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading marketplace...
+      </div>
+    );
+  }
 
   return (
     <div className={`${inter.className} bg-[#e2eddb] min-h-screen`}>
@@ -211,7 +176,7 @@ export default function MarketplacePage() {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    onAdd={handleAddToCart}
+                    onAdd={addToCart}
                   />
                 ))}
               </div>
@@ -264,7 +229,7 @@ export default function MarketplacePage() {
                         </div>
                         <div className="flex flex-col items-end gap-2 shrink-0">
                           <button
-                            onClick={() => handleRemoveFromCart(item.id)}
+                            onClick={() => removeFromCart(item.id)}
                             className="text-gray-400 hover:text-red-500 transition-colors"
                           >
                             <span className="text-sm font-medium">✕</span>
@@ -272,7 +237,7 @@ export default function MarketplacePage() {
                           <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg p-1 border border-gray-100">
                             <button
                               onClick={() =>
-                                handleUpdateQuantity(
+                                updateQuantity(
                                   item.id,
                                   Math.max(1, item.quantity - 1),
                                 )
@@ -286,7 +251,7 @@ export default function MarketplacePage() {
                             </span>
                             <button
                               onClick={() =>
-                                handleUpdateQuantity(item.id, item.quantity + 1)
+                                updateQuantity(item.id, item.quantity + 1)
                               }
                               className="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-md text-lg leading-none"
                             >

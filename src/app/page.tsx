@@ -1,86 +1,18 @@
 'use client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { authClient } from '@/lib/auth-client';
 import {
-  Activity,
-  ArrowLeft,
   ArrowRight,
-  Brain,
   CheckCircle,
-  Heart,
-  LogOut,
   ShieldCheck,
-  ShoppingCart,
-  Star,
   Stethoscope,
-  Target,
   TrendingUp,
-  User,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
 
 export default function LandingPage() {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session } = authClient.useSession();
   const isLoggedIn = !!session?.user;
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleLogout = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          setIsDropdownOpen(false);
-          router.refresh(); // Segarkan halaman untuk menghapus sisa state
-        },
-      },
-    });
-  };
-
-  const features = [
-    {
-      icon: Brain,
-      title: 'Analisis Berbasis AI',
-      description:
-        'Algoritma canggih menghitung WHO Z-Score, BMI, dan kebutuhan nutrisi personal Anda.',
-      color: 'bg-blue-500',
-    },
-    {
-      icon: Target,
-      title: 'Meal Plan Personal',
-      description:
-        'Dapatkan rekomendasi menu makan harian yang dikurasi khusus oleh sistem AI.',
-      color: 'bg-green-600',
-    },
-    {
-      icon: ShoppingCart,
-      title: 'Marketplace Sehat',
-      description:
-        'Belanja bahan makanan dengan label transparansi nutrisi dan peringatan risiko.',
-      color: 'bg-orange-500',
-    },
-    {
-      icon: Activity,
-      title: 'Pelacakan Real-Time',
-      description:
-        'Pantau perkembangan metrik kesehatan dan asupan kalori harian secara berkelanjutan.',
-      color: 'bg-red-500',
-    },
-  ];
 
   const categories = [
     {
