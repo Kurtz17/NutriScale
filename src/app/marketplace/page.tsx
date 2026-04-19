@@ -25,7 +25,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Inter } from 'next/font/google';
 import { useRouter } from 'next/navigation';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -101,10 +101,15 @@ export default function MarketplacePage() {
     });
   };
 
-  const handleUpdateQuantity = (productId: string | number, quantity: number) => {
+  const handleUpdateQuantity = (
+    productId: string | number,
+    quantity: number,
+  ) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === productId ? { ...item, quantity: Math.max(1, quantity) } : item,
+        item.id === productId
+          ? { ...item, quantity: Math.max(1, quantity) }
+          : item,
       ),
     );
   };
@@ -185,15 +190,6 @@ export default function MarketplacePage() {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Button className="bg-black text-white relative rounded-xl hover:bg-gray-800">
-            Cart
-            {totalItemCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white border-none">
-                {totalItemCount}
-              </Badge>
-            )}
-          </Button>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -316,7 +312,7 @@ export default function MarketplacePage() {
                   Rp {subtotal.toLocaleString()}
                 </span>
               </div>
-              <Button 
+              <Button
                 onClick={handleCheckout}
                 className="w-full bg-[#1a1a1a] hover:bg-black text-white py-6 rounded-xl text-base font-medium transition-all"
               >
