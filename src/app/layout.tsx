@@ -1,3 +1,5 @@
+import Footer from '@/components/ui/footer';
+import Navbar from '@/components/ui/navbar';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
@@ -34,7 +36,13 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#E1EEDD]">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#E1EEDD]">
+        <Navbar />
+
+        <main className="grow">{children}</main>
+
+        <Footer />
+      </body>
     </html>
   );
 }
