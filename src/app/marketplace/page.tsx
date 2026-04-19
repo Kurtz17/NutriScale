@@ -24,7 +24,8 @@ import ProductCard, {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Inter } from 'next/font/google';
-import React, { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useMemo, useState, useEffect } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -33,13 +34,39 @@ type CartItem = Product & {
 };
 
 export default function MarketplacePage() {
+  const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   // State untuk Fitur Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  // Ambil daftar kategori
+  // Load data dari LocalStorage saat pertama kali render
+  useEffect(() => {
+    const savedCart = localStorage.getItem('nutriscale-cart');
+    const timeout = setTimeout(() => {
+      if (savedCart) {
+        setCart(JSON.parse(savedCart));
+      }
+      setHasHydrated(true);
+    }, 0);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Simpan ke LocalStorage tiap ada perubahan cart
+  useEffect(() => {
+    if (hasHydrated) {
+      if (cart.length > 0) {
+        localStorage.setItem('nutriscale-cart', JSON.stringify(cart));
+      } else {
+        localStorage.removeItem('nutriscale-cart');
+      }
+    }
+  }, [cart, hasHydrated]);
+
+  // Ambil daftar kategori unik
   const categories = useMemo(() => {
     const uniqueCategories = Array.from(
       new Set(mockProducts.map((p) => p.category)),
@@ -47,7 +74,7 @@ export default function MarketplacePage() {
     return ['All', ...uniqueCategories];
   }, []);
 
-  // Logika Saringan
+  // Logika Saringan Produk
   const filteredProducts = useMemo(() => {
     return mockProducts.filter((product) => {
       const matchesSearch = product.name
@@ -59,7 +86,7 @@ export default function MarketplacePage() {
     });
   }, [searchQuery, selectedCategory]);
 
-  // Logika Keranjang
+  // Logika Keranjang (Tambah, Kurang, Hapus)
   const handleAddToCart = (product: Product) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
@@ -74,18 +101,25 @@ export default function MarketplacePage() {
     });
   };
 
-  const handleRemoveFromCart = (productId: number) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
-  };
-
-  const handleUpdateQuantity = (productId: number, quantity: number) => {
+  const handleUpdateQuantity = (productId: string | number, quantity: number) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === productId ? { ...item, quantity } : item,
+        item.id === productId ? { ...item, quantity: Math.max(1, quantity) } : item,
       ),
     );
   };
 
+  const handleRemoveFromCart = (productId: string | number) => {
+    setCart((prev) => prev.filter((item) => item.id !== productId));
+  };
+
+  const handleCheckout = () => {
+    if (cart.length === 0) return alert('Keranjang masih kosong!');
+    localStorage.setItem('nutriscale-cart', JSON.stringify(cart));
+    router.push('/checkout');
+  };
+
+  // Kalkulasi Total
   const totalCalories = cart.reduce(
     (total, item) => total + item.calories * item.quantity,
     0,
@@ -96,6 +130,9 @@ export default function MarketplacePage() {
   );
   const totalItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
+  // Mencegah hydration mismatch antara server dan client
+  if (!hasHydrated) return null;
+
   return (
     <div className={`${inter.className} bg-[#e2eddb] min-h-screen`}>
       <div className="max-w-7xl mx-auto p-4 lg:p-8 pt-6 lg:pt-10">
@@ -104,7 +141,7 @@ export default function MarketplacePage() {
             Health Marketplace
           </h1>
           <p className="text-gray-500 font-medium mt-1">
-            Curated healthy foods & ingredients
+            Curated healthy foods & ingredients for your needs
           </p>
         </header>
 
@@ -279,7 +316,10 @@ export default function MarketplacePage() {
                   Rp {subtotal.toLocaleString()}
                 </span>
               </div>
-              <Button className="w-full bg-[#1a1a1a] hover:bg-black text-white py-6 rounded-xl text-base font-medium transition-all">
+              <Button 
+                onClick={handleCheckout}
+                className="w-full bg-[#1a1a1a] hover:bg-black text-white py-6 rounded-xl text-base font-medium transition-all"
+              >
                 Checkout
               </Button>
             </CardFooter>
