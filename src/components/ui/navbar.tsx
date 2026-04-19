@@ -1,4 +1,5 @@
 'use client';
+import { authClient } from '@/lib/auth-client';
 import {
   LayoutDashboard,
   LogOut,
@@ -14,21 +15,16 @@ export default function Navbar() {
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // --- KENDALI FRONT-END DISINI ---
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Ganti ke false buat tes tampilan Guest
+  const { data: session } = authClient.useSession();
+  const isLoggedIn = !!session?.user;
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const userData = {
-    name: 'yaw',
-    email: 'yaw@unpad.ac.id',
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await authClient.signOut();
     setIsDropdownOpen(false);
     router.push('/');
   };
-  // -------------------------------
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
@@ -45,6 +41,35 @@ export default function Navbar() {
             <span className="text-2xl font-black tracking-tighter text-[#1A1A1B]">
               NutriScale
             </span>
+          </div>
+
+          {/* Menu Utama (Tengah) */}
+          <div className="hidden md:flex items-center space-x-8">
+            <button
+              onClick={() => router.push('/')}
+              className="text-gray-600 hover:text-black font-semibold transition-colors"
+            >
+              Home
+            </button>
+            <button
+              onClick={() => router.push('/marketplace')}
+              className="text-gray-600 hover:text-black font-semibold transition-colors"
+            >
+              Marketplace
+            </button>
+            <button
+              disabled
+              onClick={() => router.push('/smart-counter')}
+              className="text-gray-600 hover:text-black font-semibold transition-colors"
+            >
+              Smart Counter
+            </button>
+            <button
+              onClick={() => router.push('/health-dashboard')}
+              className="text-gray-600 hover:text-black font-semibold transition-colors"
+            >
+              Dashboard
+            </button>
           </div>
 
           {/* Navigasi & Auth */}
@@ -83,17 +108,17 @@ export default function Navbar() {
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="w-10 h-10 rounded-xl bg-[#E1EEDD] flex items-center justify-center font-bold text-green-700 border-2 border-white shadow-sm hover:ring-2 hover:ring-green-500 transition-all"
                   >
-                    {userData.name.substring(0, 1).toUpperCase()}
+                    {session?.user?.name?.substring(0, 1).toUpperCase() || 'U'}
                   </button>
 
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50">
                       <div className="px-3 py-2 border-b border-slate-100 mb-2">
                         <p className="font-bold text-sm text-slate-900 truncate">
-                          {userData.name}
+                          {session?.user?.name || 'User'}
                         </p>
                         <p className="text-xs text-slate-500 truncate">
-                          {userData.email}
+                          {session?.user?.email || ''}
                         </p>
                       </div>
                       <button

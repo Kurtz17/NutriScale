@@ -1,13 +1,13 @@
 'use client';
 
-import ActionButtons from './components/action-buttons';
-import CalorieChart from './components/charts/calorie-chart';
-import ProteinChart from './components/charts/protein-chart';
-import HealthStatus from './components/health-status';
-import HealthTip from './components/health-tip';
-import MealSection from './components/meal-section';
-import StatCard from './components/stat-card';
-import { stats } from './data/dummy-data';
+import ActionButtons from '@/components/health-dashboard/components/action-buttons';
+import CalorieChart from '@/components/health-dashboard/components/charts/calorie-chart';
+import ProteinChart from '@/components/health-dashboard/components/charts/protein-chart';
+import HealthStatus from '@/components/health-dashboard/components/health-status';
+import HealthTip from '@/components/health-dashboard/components/health-tip';
+import MealSection from '@/components/health-dashboard/components/meal-section';
+import StatCard from '@/components/health-dashboard/components/stat-card';
+import { stats } from '@/components/health-dashboard/data/dummy-data';
 
 export default function HealthDashboardPage() {
   return (
