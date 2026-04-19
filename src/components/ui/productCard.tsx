@@ -24,8 +24,10 @@ const ProductCard: React.FC<{
     <Card className="rounded-3xl border-none shadow-sm flex flex-col gap-4 p-4 bg-white">
       <CardContent className="p-0">
         <div className="flex justify-center">
-          <div className="bg-gray-100 rounded-xl p-6">
-            <span className="text-4xl">{product.image}</span>
+          <div className="bg-gray-50 rounded-2xl w-full flex items-center justify-center py-8 border border-gray-100">
+            <span className="text-6xl transition-transform duration-500 group-hover:scale-110">
+              {product.image}
+            </span>
           </div>
         </div>
 

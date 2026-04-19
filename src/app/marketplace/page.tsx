@@ -215,12 +215,8 @@ export default function MarketplacePage() {
                         key={item.id}
                         className="flex items-center gap-3 border border-gray-100 p-3 rounded-2xl bg-white shadow-sm"
                       >
-                        <div className="bg-gray-50 rounded-xl w-12 h-12 shrink-0 overflow-hidden border border-gray-100">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
+                        <div className="bg-gray-50 rounded-xl p-2 w-12 h-12 flex items-center justify-center shrink-0 border border-gray-100">
+                          <span className="text-2xl">{item.image}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-sm truncate">
