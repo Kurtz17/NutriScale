@@ -1,18 +1,17 @@
 'use client';
 
+import Progress from '@/components/health-assessment/components/progress';
+// step components
+import Step1 from '@/components/health-assessment/components/step-1-basic';
+import Step2 from '@/components/health-assessment/components/step-2-anthropometry';
+import Step3Balita from '@/components/health-assessment/components/step-3/balita';
+import Step3IbuHamil from '@/components/health-assessment/components/step-3/ibu-hamil';
+import Step3PascaOperasi from '@/components/health-assessment/components/step-3/pasca-operasi';
+import Step3Umum from '@/components/health-assessment/components/step-3/umum';
+// types
+import { HealthFormData } from '@/components/health-assessment/types/health';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-
-import Progress from './components/progress';
-// step components
-import Step1 from './components/step-1-basic';
-import Step2 from './components/step-2-anthropometry';
-import Step3Balita from './components/step-3/balita';
-import Step3IbuHamil from './components/step-3/ibu-hamil';
-import Step3PascaOperasi from './components/step-3/pasca-operasi';
-import Step3Umum from './components/step-3/umum';
-// types
-import { HealthFormData } from './types/health';
 
 export default function HealthAssessmentPage() {
   const router = useRouter();
@@ -81,7 +80,6 @@ export default function HealthAssessmentPage() {
         <>
           {formData.category === 'umum' && (
             <Step3Umum
-              nextStep={nextStep}
               prevStep={prevStep}
               formData={formData}
               setFormData={setFormData}
@@ -90,7 +88,6 @@ export default function HealthAssessmentPage() {
 
           {formData.category === 'balita' && (
             <Step3Balita
-              nextStep={nextStep}
               prevStep={prevStep}
               formData={formData}
               setFormData={setFormData}
@@ -99,7 +96,6 @@ export default function HealthAssessmentPage() {
 
           {formData.category === 'ibu_hamil' && (
             <Step3IbuHamil
-              nextStep={nextStep}
               prevStep={prevStep}
               formData={formData}
               setFormData={setFormData}
@@ -108,7 +104,6 @@ export default function HealthAssessmentPage() {
 
           {formData.category === 'pasca_operasi' && (
             <Step3PascaOperasi
-              nextStep={nextStep}
               prevStep={prevStep}
               formData={formData}
               setFormData={setFormData}

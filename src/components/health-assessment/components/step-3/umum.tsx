@@ -1,6 +1,6 @@
 'use client';
 
-import { StepProps } from '@/app/health-assessment/types/health';
+import { StepProps } from '@/components/health-assessment/types/health';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
