@@ -10,12 +10,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import { AddressData } from '../types';
+
 interface Props {
-  initialData?: unknown;
+  initialData?: AddressData;
+  disabled?: boolean;
 }
 
-export default function AddressFields(_: Props) {
-  const inputStyle = 'w-full bg-[#F3F4F6] rounded-xl h-12 px-4 mt-2'; // ✅ INI KUNCI FIX
+export default function AddressFields({
+  initialData,
+  disabled = false,
+}: Props) {
+  const inputStyle =
+    'w-full bg-[#F3F4F6] rounded-xl h-12 px-4 mt-2 disabled:opacity-50'; // ✅ INI KUNCI FIX
 
   const kelurahan = [
     'Cibeusi',
@@ -49,17 +56,31 @@ export default function AddressFields(_: Props) {
     <div className="grid md:grid-cols-2 gap-4">
       <div>
         <Label>Provinsi</Label>
-        <Input value="Jawa Barat" disabled className={inputStyle} />
+        <Input
+          name="provinsi"
+          value="Jawa Barat"
+          disabled
+          className={inputStyle}
+        />
       </div>
 
       <div>
         <Label>Kabupaten</Label>
-        <Input value="Jatinangor" disabled className={inputStyle} />
+        <Input
+          name="kabupaten"
+          value="Jatinangor"
+          disabled
+          className={inputStyle}
+        />
       </div>
 
       <div>
         <Label>Kelurahan</Label>
-        <Select>
+        <Select
+          name="kelurahan"
+          defaultValue={initialData?.kelurahan}
+          disabled={disabled}
+        >
           <SelectTrigger className={inputStyle}>
             <SelectValue placeholder="Pilih kelurahan" />
           </SelectTrigger>
@@ -75,7 +96,11 @@ export default function AddressFields(_: Props) {
 
       <div>
         <Label>Jalan</Label>
-        <Select>
+        <Select
+          name="jalan"
+          defaultValue={initialData?.jalan}
+          disabled={disabled}
+        >
           <SelectTrigger className={inputStyle}>
             <SelectValue placeholder="Pilih jalan" />
           </SelectTrigger>
@@ -91,17 +116,33 @@ export default function AddressFields(_: Props) {
 
       <div>
         <Label>RT</Label>
-        <Input type="number" min={1} max={10} className={inputStyle} />
+        <Input
+          name="rt"
+          defaultValue={initialData?.rt}
+          type="number"
+          min={1}
+          max={10}
+          disabled={disabled}
+          className={inputStyle}
+        />
       </div>
 
       <div>
         <Label>RW</Label>
-        <Input type="number" min={1} max={10} className={inputStyle} />
+        <Input
+          name="rw"
+          defaultValue={initialData?.rw}
+          type="number"
+          min={1}
+          max={10}
+          disabled={disabled}
+          className={inputStyle}
+        />
       </div>
 
       <div className="md:col-span-2">
         <Label>Kode Pos</Label>
-        <Input value="45363" disabled className={inputStyle} />
+        <Input name="kodePos" value="45363" disabled className={inputStyle} />
       </div>
     </div>
   );
