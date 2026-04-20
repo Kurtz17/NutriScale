@@ -69,7 +69,6 @@ export default function LoginPage() {
         alignItems: 'center',
         height: '100vh',
         backgroundColor: '#e2eddb',
-        fontFamily: 'sans-serif',
       }}
     >
       {/* Header */}

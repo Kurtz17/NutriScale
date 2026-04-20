@@ -86,6 +86,67 @@ export async function saveHealthAssessment(
       });
     }
 
+    // --- INTEGRASI AI ENGINE ---
+    try {
+      const aiResponse = await fetch(
+        `${process.env.AI_ENGINE_URL}/api/recommend`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': process.env.AI_ENGINE_API_KEY || '',
+          },
+          body: JSON.stringify({
+            umur: formData.age !== '' ? Number(formData.age) : 20,
+            jenisKelamin:
+              jenisKelamin === JenisKelamin.LAKI_LAKI
+                ? 'LAKI_LAKI'
+                : 'PEREMPUAN',
+            beratBadan: formData.weight !== '' ? Number(formData.weight) : 0,
+            tinggiBadan: formData.height !== '' ? Number(formData.height) : 0,
+            kategoriKondisi: kategoriKondisi,
+            usiaKehamilanMinggu,
+            pantanganMedis,
+          }),
+        },
+      );
+
+      if (aiResponse.ok) {
+        const aiResult = await aiResponse.json();
+        const { riwayat_analisis, meal_plan } = aiResult.data;
+
+        const targetProfilId = existingProfile?.id || profilId;
+        const analisisId = crypto.randomUUID();
+
+        // 1. Simpan Riwayat Analisis
+        await prisma.riwayatAnalisis.create({
+          data: {
+            id: analisisId,
+            profilId: targetProfilId,
+            haz: riwayat_analisis.haz,
+            whz: riwayat_analisis.whz,
+            bmi: riwayat_analisis.bmi,
+            statusNutrisi: riwayat_analisis.statusNutrisi,
+          },
+        });
+
+        // 2. Simpan Meal Plan (Sesuai instruksi: narasiAI masuk ke JSON)
+        await prisma.mealPlan.create({
+          data: {
+            id: crypto.randomUUID(),
+            analisisId: analisisId,
+            detailRencanaMakan: {
+              ...meal_plan.detailRencanaMakan,
+              narasiAI: riwayat_analisis.narasiAI,
+            },
+          },
+        });
+      }
+    } catch (aiError) {
+      console.error('AI Engine Integration Failed:', aiError);
+      // Kita tidak menggagalkan seluruh request jika AI gagal, cukup log.
+    }
+
     return { success: true };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

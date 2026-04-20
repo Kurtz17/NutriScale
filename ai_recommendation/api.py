@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, Security, Request
 from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel, Field
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -14,11 +15,15 @@ from model import load_and_preprocess_kaggle_data, jalankan_ai_rekomendasi
 
 # ==========================================================
 # GLOABAL STATE: PRE-LOAD DATASET & SCALER KE MEMORY RAM
-# ==========================================================
+# ==========================================
+# Load .env dari root (parent directory)
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
+
 df_dataset = None
 scaler_dict = None
 
-API_KEY = os.environ.get("API_KEY", "nutriscale-secret-key-2026")
+# Gunakan AI_ENGINE_API_KEY agar sinkron dengan .env di root
+API_KEY = os.environ.get("AI_ENGINE_API_KEY", "nutriscale-secret-key-2026")
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=True)
 
 async def verify_api_key(api_key: str = Security(api_key_header)):
