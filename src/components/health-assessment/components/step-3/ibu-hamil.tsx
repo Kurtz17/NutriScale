@@ -1,15 +1,21 @@
 'use client';
 
+import { saveHealthAssessment } from '@/app/health-assessment/actions';
 import { StepProps } from '@/components/health-assessment/types/health';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function IbuHamil({
   formData,
   setFormData,
   prevStep,
+  userId,
 }: StepProps) {
-  const handleSubmit = () => {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const handleSubmit = async () => {
     if (!formData.gestasi || !formData.kalori) {
       alert('Semua field wajib diisi!');
       return;
@@ -28,8 +34,16 @@ export default function IbuHamil({
       return;
     }
 
-    console.log('FINAL DATA:', formData);
-    alert('Data berhasil disimpan!');
+    setLoading(true);
+    const res = await saveHealthAssessment(formData, userId || '');
+    setLoading(false);
+
+    if (res.success) {
+      alert('Data berhasil disimpan!');
+      router.push('/health-dashboard');
+    } else {
+      alert(res.error || 'Terjadi kesalahan sistem.');
+    }
   };
 
   return (
@@ -82,8 +96,9 @@ export default function IbuHamil({
         <Button
           className="max-w-md w-full mx-auto block"
           onClick={handleSubmit}
+          disabled={loading}
         >
-          Save
+          {loading ? 'Saving...' : 'Save'}
         </Button>
       </div>
     </div>

@@ -20,4 +20,5 @@ export interface StepProps {
   setFormData: (data: HealthFormData) => void;
   nextStep?: () => void;
   prevStep?: () => void;
+  userId?: string;
 }
