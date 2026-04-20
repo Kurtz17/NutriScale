@@ -87,13 +87,6 @@ export default function Navbar() {
                 Marketplace
               </button>
               <button
-                disabled
-                onClick={() => router.push('/smart-counter')}
-                className="text-gray-600 hover:text-black font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Smart Counter
-              </button>
-              <button
                 onClick={() => router.push('/health-dashboard')}
                 className="text-gray-600 hover:text-black font-semibold transition-colors"
               >

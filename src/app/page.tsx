@@ -74,9 +74,8 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() =>
-                  router.push(isLoggedIn ? '/smart-counter' : '/register')
+                  router.push(isLoggedIn ? '/health-dashboard' : '/register')
                 }
-                disabled={isLoggedIn}
                 className="bg-[#1A1A1B] text-white px-10 py-5 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Mulai Analisis Gratis <ArrowRight className="w-5 h-5" />
@@ -207,7 +206,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
             <button
               onClick={() =>
-                router.push(isLoggedIn ? '/health-dashboard' : '/register')
+                router.push(isLoggedIn ? '/marketplace' : '/register')
               }
               className="bg-white text-[#1A1A1B] px-12 py-5 rounded-2xl text-lg font-bold hover:bg-gray-100 transition-all active:scale-95"
             >
@@ -215,9 +214,8 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() =>
-                router.push(isLoggedIn ? '/smart-counter' : '/login')
+                router.push(isLoggedIn ? '/health-dashboard' : '/login')
               }
-              disabled={isLoggedIn}
               className="bg-transparent border-2 border-white text-white px-12 py-5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Hubungi Spesialis
