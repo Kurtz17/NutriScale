@@ -30,6 +30,15 @@ jobs:
       - name: Run prettier
         run: npm run format:check
 
+      - name: run migration
+        run: npx prisma migrate dev
+
+      - name: generate prisma client
+        run: npx prisma generate
+
+      - name: run seeding script
+        run: npm run prisma:seed
+
       - name: Run tests
         run: npm test
 
