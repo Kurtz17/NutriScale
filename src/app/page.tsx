@@ -1,85 +1,18 @@
 'use client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { authClient } from '@/lib/auth-client';
 import {
-  Activity,
-  ArrowLeft,
   ArrowRight,
-  Brain,
   CheckCircle,
-  Heart,
-  LogOut,
   ShieldCheck,
-  ShoppingCart,
-  Star,
   Stethoscope,
-  Target,
   TrendingUp,
-  User,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
 
 export default function LandingPage() {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleLogout = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          setIsDropdownOpen(false);
-          router.refresh(); // Segarkan halaman untuk menghapus sisa state
-        },
-      },
-    });
-  };
-
-  const features = [
-    {
-      icon: Brain,
-      title: 'Analisis Berbasis AI',
-      description:
-        'Algoritma canggih menghitung WHO Z-Score, BMI, dan kebutuhan nutrisi personal Anda.',
-      color: 'bg-blue-500',
-    },
-    {
-      icon: Target,
-      title: 'Meal Plan Personal',
-      description:
-        'Dapatkan rekomendasi menu makan harian yang dikurasi khusus oleh sistem AI.',
-      color: 'bg-green-600',
-    },
-    {
-      icon: ShoppingCart,
-      title: 'Marketplace Sehat',
-      description:
-        'Belanja bahan makanan dengan label transparansi nutrisi dan peringatan risiko.',
-      color: 'bg-orange-500',
-    },
-    {
-      icon: Activity,
-      title: 'Pelacakan Real-Time',
-      description:
-        'Pantau perkembangan metrik kesehatan dan asupan kalori harian secara berkelanjutan.',
-      color: 'bg-red-500',
-    },
-  ];
+  const { data: session } = authClient.useSession();
+  const isLoggedIn = !!session?.user;
 
   const categories = [
     {
@@ -122,95 +55,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-[#1A1A1B]">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div
-              className="flex items-center space-x-3 cursor-pointer"
-              onClick={() => router.push('/')}
-            >
-              <span className="text-2xl font-black tracking-tighter text-[#1A1A1B]">
-                NutriScale
-              </span>
-            </div>
-            <div
-              className="flex items-center space-x-6 relative"
-              ref={dropdownRef}
-            >
-              {isPending ? (
-                <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse"></div>
-              ) : session ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 focus:outline-none"
-                  >
-                    <Avatar className="w-10 h-10 border-2 border-white shadow-sm ring-2 ring-transparent hover:ring-green-500 transition-all">
-                      <AvatarImage
-                        src={session.user.image || '/avatar.jpg'}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="bg-green-100 text-green-700 font-bold">
-                        {session.user.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-
-                  {/* Pop Up Dropdown */}
-                  {isDropdownOpen && (
-                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 p-2 z-50 transform origin-top-right transition-all">
-                      <div className="px-3 py-2 border-b border-slate-100 mb-2">
-                        <p className="font-bold text-sm text-slate-900 truncate">
-                          {session.user.name}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
-                          {session.user.email}
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setIsDropdownOpen(false);
-                          router.push('/profile');
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 font-medium hover:bg-slate-50 rounded-xl transition-colors text-left"
-                      >
-                        <User className="w-4 h-4 text-slate-500" />
-                        Profile Settings
-                      </button>
-
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 font-medium hover:bg-red-50 rounded-xl transition-colors text-left"
-                      >
-                        <LogOut className="w-4 h-4 text-red-500" />
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <button
-                    onClick={() => router.push('/login')}
-                    className="font-bold hover:text-green-700 transition-colors"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => router.push('/register')}
-                    className="bg-[#1A1A1B] text-white px-6 py-3 rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95"
-                  >
-                    Get Started
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-linear-to-b from-[#E1EEDD] to-white py-24 px-4">
         <div className="max-w-7xl mx-auto relative z-10">
@@ -229,17 +73,21 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => router.push('/register')}
-                className="bg-[#1A1A1B] text-white px-10 py-5 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-xl active:scale-95"
+                onClick={() =>
+                  router.push(isLoggedIn ? '/health-dashboard' : '/register')
+                }
+                className="bg-[#1A1A1B] text-white px-10 py-5 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Mulai Analisis Gratis <ArrowRight className="w-5 h-5" />
               </button>
-              <button
-                onClick={() => router.push('/login')}
-                className="bg-white border-2 border-[#1A1A1B] px-10 py-5 rounded-2xl text-lg font-bold hover:bg-gray-50 transition-all active:scale-95"
-              >
-                Sign In
-              </button>
+              {!isLoggedIn && (
+                <button
+                  onClick={() => router.push('/login')}
+                  className="bg-white border-2 border-[#1A1A1B] px-10 py-5 rounded-2xl text-lg font-bold hover:bg-gray-50 transition-all active:scale-95"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
 
             {/* Trust Indicators */}
@@ -357,69 +205,24 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
             <button
-              onClick={() => router.push('/register')}
+              onClick={() =>
+                router.push(isLoggedIn ? '/marketplace' : '/register')
+              }
               className="bg-white text-[#1A1A1B] px-12 py-5 rounded-2xl text-lg font-bold hover:bg-gray-100 transition-all active:scale-95"
             >
               Mulai Sekarang
             </button>
             <button
-              onClick={() => router.push('/login')}
-              className="bg-transparent border-2 border-white text-white px-12 py-5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all active:scale-95"
+              onClick={() =>
+                router.push(isLoggedIn ? '/health-dashboard' : '/login')
+              }
+              className="bg-transparent border-2 border-white text-white px-12 py-5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Hubungi Spesialis
             </button>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-100 py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center space-x-3 mb-6">
-                <span className="text-xl font-black tracking-tight">
-                  NutriScale
-                </span>
-              </div>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                Platform cerdas pengelolaan gizi personal untuk masyarakat
-                Indonesia. Berkontribusi pada SDGs poin 2: Zero Hunger.
-              </p>
-            </div>
-            {['Produk', 'Perusahaan', 'Legal'].map((title, i) => (
-              <div key={i}>
-                <h4 className="font-black text-lg mb-6">{title}</h4>
-                <ul className="space-y-4 text-gray-500 text-sm">
-                  <li>
-                    <a href="#" className="hover:text-black transition-colors">
-                      Layanan AI
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-black transition-colors">
-                      Marketplace
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-black transition-colors">
-                      Tentang Kami
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-black transition-colors">
-                      Kebijakan Privasi
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="mt-20 pt-8 border-t border-gray-50 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
-            © 2026 NutriScale. Universitas Padjadjaran Informatika.
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

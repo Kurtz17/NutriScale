@@ -1,69 +1,62 @@
 'use server';
 
+import { Prisma } from '@/app/generated/prisma/client';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 
-export async function updateProfile(formData: FormData) {
-  // 1. Dapatkan sesi pengguna yang sedang login
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+import { AddressData } from './types';
 
-  if (!session) {
-    throw new Error('Tidak ada akses (Unauthorized)');
-  }
+export async function updateProfile(data: {
+  name: string;
+  username: string;
+  tanggalLahir: string;
+  phone: string;
+  address: AddressData;
+  notification: boolean;
+  image?: string;
+}) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
-  const userId = session.user.id;
+    if (!session?.user?.id) {
+      return { success: false, error: 'Unauthorized' };
+    }
 
-  // 2. Ambil data dari input form
-  const name = formData.get('name') as string;
-  const umur = Number(formData.get('umur'));
-  const jenisKelamin = formData.get('jenisKelamin') as
-    | 'LAKI_LAKI'
-    | 'PEREMPUAN';
-  const tinggiBadan = Number(formData.get('tinggiBadan'));
-  const beratBadan = Number(formData.get('beratBadan'));
+    // Check if username is taken by someone else
+    if (data.username) {
+      const existingUser = await prisma.user.findUnique({
+        where: { username: data.username },
+      });
 
-  // 3. Update tabel User (Nama Lengkap)
-  await prisma.user.update({
-    where: { id: userId },
-    data: { name: name },
-  });
+      if (existingUser && existingUser.id !== session.user.id) {
+        return { success: false, error: 'Username is already taken' };
+      }
+    }
 
-  // 4. Update atau Buat data Profil Kesehatan
-  const existingProfile = await prisma.profilKesehatan.findFirst({
-    where: { userId: userId },
-    orderBy: { updatedAt: 'desc' },
-  });
-
-  if (existingProfile) {
-    // Jika sudah ada, update profil lama
-    await prisma.profilKesehatan.update({
-      where: { id: existingProfile.id },
+    await prisma.user.update({
+      where: { id: session.user.id },
       data: {
-        umur,
-        jenisKelamin,
-        tinggiBadan,
-        beratBadan,
+        name: data.name,
+        username: data.username,
+        tanggalLahir: data.tanggalLahir,
+        phone: data.phone,
+        address: data.address as Prisma.InputJsonValue,
+        notification: data.notification,
+        ...(data.image ? { image: data.image } : {}),
       },
     });
-  } else {
-    // Jika baru pertama kali diisi, buat record baru
-    await prisma.profilKesehatan.create({
-      data: {
-        id: crypto.randomUUID(),
-        userId: userId,
-        namaProfil: 'Profil Utama',
-        umur,
-        jenisKelamin,
-        tinggiBadan,
-        beratBadan,
-      },
-    });
-  }
 
-  // 5. Refresh halaman agar data terbaru langsung muncul
-  revalidatePath('/profile');
+    revalidatePath('/profile');
+    revalidatePath('/'); // for navbar
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update profile:', error);
+    const message =
+      error instanceof Error ? error.message : 'Something went wrong';
+    return { success: false, error: message };
+  }
 }
