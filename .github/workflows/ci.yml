@@ -7,7 +7,6 @@ on:
   push:
     branches: [main, dev]
 
-#temp .env for CI
 env:
   BETTER_AUTH_SECRET: my-betterauth-secret
   POSTGRES_USER: testuser
@@ -20,6 +19,21 @@ jobs:
   ci:
     name: Lint, Prettier, and Test Case Check
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout branch
@@ -39,13 +53,13 @@ jobs:
       - name: Run prettier
         run: npm run format:check
 
-      - name: run migration
-        run: npx prisma migrate dev
-
-      - name: generate prisma client
+      - name: Generate prisma client
         run: npx prisma generate
 
-      - name: run seeding script
+      - name: Run migration
+        run: npx prisma migrate deploy
+
+      - name: Run seeding script
         run: npm run prisma:seed
 
       - name: Run tests
