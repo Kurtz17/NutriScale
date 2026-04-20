@@ -47,17 +47,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate prisma client
+        run: npx prisma generate
+
+      - name: Run migration
+        run: npx prisma migrate deploy
+
       - name: Run lint
         run: npm run lint
 
       - name: Run prettier
         run: npm run format:check
-
-      - name: Run migration
-        run: npx prisma migrate deploy
-
-      - name: Generate prisma client
-        run: npx prisma generate
 
       - name: Run seeding script
         run: npm run prisma:seed
