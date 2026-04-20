@@ -1,8 +1,11 @@
 'use client';
 
+import { saveHealthAssessment } from '@/app/health-assessment/actions';
 import { StepProps } from '@/components/health-assessment/types/health';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const OPERASI_OPTIONS = [
   'Operasi Lambung (Gastrektomi)',
@@ -65,7 +68,10 @@ export default function PascaOperasi({
   formData,
   setFormData,
   prevStep,
+  userId,
 }: StepProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const handleCheckbox = (item: string) => {
     const current = formData.larangan || [];
 
@@ -83,14 +89,22 @@ export default function PascaOperasi({
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.operasi || !formData.kalori) {
       alert('Operasi & kalori wajib diisi!');
       return;
     }
 
-    console.log('FINAL DATA:', formData);
-    alert('Data berhasil disimpan!');
+    setLoading(true);
+    const res = await saveHealthAssessment(formData, userId || '');
+    setLoading(false);
+
+    if (res.success) {
+      alert('Data berhasil disimpan!');
+      router.push('/health-dashboard');
+    } else {
+      alert(res.error || 'Terjadi kesalahan sistem.');
+    }
   };
 
   return (
@@ -168,8 +182,9 @@ export default function PascaOperasi({
         <Button
           className="max-w-md w-full mx-auto block"
           onClick={handleSubmit}
+          disabled={loading}
         >
-          Save
+          {loading ? 'Saving...' : 'Save'}
         </Button>
       </div>
     </div>

@@ -10,11 +10,13 @@ import Step3PascaOperasi from '@/components/health-assessment/components/step-3/
 import Step3Umum from '@/components/health-assessment/components/step-3/umum';
 // types
 import { HealthFormData } from '@/components/health-assessment/types/health';
+import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function HealthAssessmentPage() {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState<HealthFormData>({
@@ -83,6 +85,7 @@ export default function HealthAssessmentPage() {
               prevStep={prevStep}
               formData={formData}
               setFormData={setFormData}
+              userId={session?.user?.id}
             />
           )}
 
@@ -91,6 +94,7 @@ export default function HealthAssessmentPage() {
               prevStep={prevStep}
               formData={formData}
               setFormData={setFormData}
+              userId={session?.user?.id}
             />
           )}
 
@@ -99,6 +103,7 @@ export default function HealthAssessmentPage() {
               prevStep={prevStep}
               formData={formData}
               setFormData={setFormData}
+              userId={session?.user?.id}
             />
           )}
 
@@ -107,6 +112,7 @@ export default function HealthAssessmentPage() {
               prevStep={prevStep}
               formData={formData}
               setFormData={setFormData}
+              userId={session?.user?.id}
             />
           )}
         </>
