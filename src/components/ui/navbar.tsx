@@ -2,8 +2,17 @@
 import { authClient } from '@/lib/auth-client';
 import { useCartStore } from '@/lib/store/useCartStore';
 import { LogOut, ShoppingCart, User } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  username?: string | null;
+}
 
 export default function Navbar() {
   const router = useRouter();
@@ -13,19 +22,37 @@ export default function Navbar() {
   const isLoggedIn = !!session?.user;
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { cart, fetchCart } = useCartStore();
 
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchCart();
-    }
+    if (!isLoggedIn) return;
+    fetchCart();
+    // Fetch fresh user data from DB (bypasses session cache)
+    fetch('/api/user/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && !data.error) setUserProfile(data);
+      })
+      .catch(() => {});
   }, [isLoggedIn, fetchCart]);
 
   const handleLogout = async () => {
     await authClient.signOut();
     setIsDropdownOpen(false);
+    setUserProfile(null);
     router.push('/');
   };
+
+  // Use userProfile (fresh from DB) if available, fallback to session
+  // Guard with isLoggedIn so stale data isn't shown after logout
+  const displayName =
+    (isLoggedIn && (userProfile?.name || session?.user?.name)) || 'User';
+  const displayEmail =
+    (isLoggedIn && (userProfile?.email || session?.user?.email)) || '';
+  const displayImage =
+    (isLoggedIn && (userProfile?.image || session?.user?.image)) || null;
+  const displayInitial = displayName?.[0]?.toUpperCase() || 'U';
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
@@ -111,19 +138,29 @@ export default function Navbar() {
                 <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-10 h-10 rounded-xl bg-[#E1EEDD] flex items-center justify-center font-bold text-green-700 border-2 border-white shadow-sm hover:ring-2 hover:ring-green-500 transition-all"
+                    className="w-10 h-10 rounded-xl bg-[#E1EEDD] flex items-center justify-center font-bold text-green-700 border-2 border-white shadow-sm hover:ring-2 hover:ring-green-500 transition-all overflow-hidden"
                   >
-                    {session?.user?.name?.substring(0, 1).toUpperCase() || 'U'}
+                    {displayImage ? (
+                      <Image
+                        src={displayImage}
+                        alt="Avatar"
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      displayInitial
+                    )}
                   </button>
 
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50">
                       <div className="px-3 py-2 border-b border-slate-100 mb-2">
                         <p className="font-bold text-sm text-slate-900 truncate">
-                          {session?.user?.name || 'User'}
+                          {displayName}
                         </p>
                         <p className="text-xs text-slate-500 truncate">
-                          {session?.user?.email || ''}
+                          {displayEmail}
                         </p>
                       </div>
                       <button

@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import ProfileForm from './profile-form';
+import { AddressData } from './types';
 
 export default async function ProfileSettingsPage() {
   const session = await auth.api.getSession({
@@ -21,13 +22,14 @@ export default async function ProfileSettingsPage() {
   if (!userDetail) return <div>User tidak ditemukan</div>;
 
   const initialData = {
+    id: userDetail.id,
     name: userDetail.name || '',
     email: userDetail.email || '',
     image: userDetail.image || '',
     username: userDetail.username || '',
     tanggalLahir: userDetail.tanggalLahir || '',
     phone: userDetail.phone || '',
-    address: userDetail.address || {},
+    address: (userDetail.address as AddressData) || {},
     notification: userDetail.notification ?? true,
   };
 
