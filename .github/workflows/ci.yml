@@ -53,11 +53,11 @@ jobs:
       - name: Run prettier
         run: npm run format:check
 
-      - name: Generate prisma client
-        run: npx prisma generate
-
       - name: Run migration
         run: npx prisma migrate deploy
+
+      - name: Generate prisma client
+        run: npx prisma generate
 
       - name: Run seeding script
         run: npm run prisma:seed
