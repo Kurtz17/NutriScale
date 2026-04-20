@@ -31,6 +31,12 @@ model User {
   banReason  String?
   banExpires DateTime?
 
+  username     String?   @unique
+  tanggalLahir String?
+  phone        String?
+  address      Json?
+  notification Boolean?  @default(true)
+
   @@unique([email])
   @@map("user")
 }
