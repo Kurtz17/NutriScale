@@ -1,6 +1,7 @@
 'use client';
 
 import ActionButtons from '@/components/health-dashboard/components/action-buttons';
+import AIInsightCard from '@/components/health-dashboard/components/ai-insight-card';
 import CalorieChart from '@/components/health-dashboard/components/charts/calorie-chart';
 import ProteinChart from '@/components/health-dashboard/components/charts/protein-chart';
 import HealthStatus from '@/components/health-dashboard/components/health-status';
@@ -13,6 +14,7 @@ import { useEffect, useState } from 'react';
 export default function HealthDashboardPage() {
   const [stats, setStats] = useState<Stat[]>([]);
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [narasiAI, setNarasiAI] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +25,7 @@ export default function HealthDashboardPage() {
           const data = await res.json();
           setStats(data.stats || []);
           setMeals(data.meals || []);
+          setNarasiAI(data.narasiAI || '');
         }
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
@@ -60,6 +63,13 @@ export default function HealthDashboardPage() {
             ),
           )}
         </div>
+
+        {/* AI INSIGHT */}
+        {narasiAI && (
+          <div className="mb-8">
+            <AIInsightCard narrative={narasiAI} />
+          </div>
+        )}
 
         {/* ACTION BUTTONS */}
         <div className="mb-8">

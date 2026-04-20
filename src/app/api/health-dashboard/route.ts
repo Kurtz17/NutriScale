@@ -43,8 +43,38 @@ export async function GET() {
     };
     let meals: MealEntry[] = [];
 
+    interface FoodItem {
+      nama_makanan: string;
+      calories: number;
+      protein: number;
+      fat: number;
+      carbs: number;
+      match_score: number;
+    }
+
+    interface MealPlanDetail {
+      target_kalori_harian?: number;
+      distribusi?: {
+        protein_g?: number;
+        fat_g?: number;
+        carbs_g?: number;
+      };
+      narasiAI?: string;
+      [key: string]: unknown; // For dynamic meal session keys
+    }
+
     if (profile && profile.riwayatAnalisis.length > 0) {
       const latest = profile.riwayatAnalisis[0];
+      const mealPlanDetail = latest.mealPlan
+        ?.detailRencanaMakan as unknown as MealPlanDetail;
+
+      const targetCalories =
+        mealPlanDetail?.target_kalori_harian ||
+        profile.anjuranKaloriDokter ||
+        2000;
+      const targetProtein = mealPlanDetail?.distribusi?.protein_g || 60;
+      const narasiAI = mealPlanDetail?.narasiAI || '';
+
       stats = [
         {
           title: 'WHO Z-Score (HAZ)',
@@ -53,15 +83,43 @@ export async function GET() {
         },
         {
           title: 'Daily Calories',
-          value: `1200 / ${profile.anjuranKaloriDokter || 2000}`,
-          progress: 60,
+          value: `0 / ${Math.round(targetCalories)}`,
+          progress: 0, // In production, this would be computed from daily logs
         },
-        { title: 'Protein Intake', value: `45 / 60g`, progress: 75 },
+        {
+          title: 'Protein Intake',
+          value: `0 / ${Math.round(targetProtein)}g`,
+          progress: 0,
+        },
         { title: 'Health Status', value: latest.statusNutrisi },
       ];
 
-      // We could parse latest.mealPlan.detailRencanaMakan here, but for simplicity:
+      // Map sessions to meals
+      const sessions = [
+        { key: 'rekomendasi_pagi', label: 'Breakfast', time: '07:00 AM' },
+        { key: 'rekomendasi_snack_pagi', label: 'Snack', time: '10:00 AM' },
+        { key: 'rekomendasi_siang', label: 'Lunch', time: '01:00 PM' },
+        { key: 'rekomendasi_snack_sore', label: 'Snack', time: '04:00 PM' },
+        { key: 'rekomendasi_malam', label: 'Dinner', time: '07:00 PM' },
+      ];
+
       meals = [];
+      sessions.forEach((s) => {
+        const foodItems = (mealPlanDetail?.[s.key] as FoodItem[]) || [];
+        if (foodItems.length > 0) {
+          const topFood = foodItems[0];
+          meals.push({
+            title: topFood.nama_makanan,
+            time: s.time,
+            calories: topFood.calories,
+            protein: topFood.protein,
+            tags: [s.label, `Match: ${topFood.match_score}%`],
+            type: s.label as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack',
+          });
+        }
+      });
+
+      return NextResponse.json({ stats, meals, narasiAI });
     }
 
     return NextResponse.json({ stats, meals });

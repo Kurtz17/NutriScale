@@ -72,7 +72,7 @@ FEATURE_WEIGHTS: dict[str, dict[str, float]] = {
 
 
 # ==========================================================================
-# MODUL 1 — DATA PIPELINE (ML PREPROCESSING)
+# [3.3.3] PRE-PROCESSING & FEATURE ENGINEERING
 # ==========================================================================
 
 def extract_numeric(val) -> float:
@@ -230,7 +230,7 @@ def load_and_preprocess_kaggle_data(csv_path: str) -> tuple[pd.DataFrame, dict]:
 
 
 # ==========================================================================
-# MODUL 2 — NUTRITIONAL EXPERT SYSTEM (BMI / WHO Z-SCORE)
+# [3.3.4] MODEL DAN ARSITEKTUR — LAYER 1: EXPERT SYSTEM (WHO Z-SCORE)
 # ==========================================================================
 
 # Referensi BMI-for-age median (CDC/WHO, disederhanakan)
@@ -280,7 +280,7 @@ def assess_nutritional_status(umur, jenisKelamin, beratBadan, tinggiBadan) -> di
 
 
 # ==========================================================================
-# MODUL 3 — CALORIC ENGINE & MACRO DISTRIBUTION
+# [3.3.4] MODEL DAN ARSITEKTUR — LAYER 2: CALORIC ENGINE
 # ==========================================================================
 
 def calculate_daily_calories(umur, jenisKelamin, beratBadan, tinggiBadan,
@@ -333,7 +333,7 @@ def calculate_daily_calories(umur, jenisKelamin, beratBadan, tinggiBadan,
 
 
 # ==========================================================================
-# MODUL 4 — CONTENT-BASED ML RECOMMENDER
+# [3.3.4] MODEL DAN ARSITEKTUR — LAYER 3: CONTENT-BASED ML RECOMMENDER
 # ==========================================================================
 
 def filter_dataset(df: pd.DataFrame, pantanganMedis: Optional[str], kategoriKondisi: str) -> pd.DataFrame:
@@ -523,7 +523,7 @@ def build_meal_plan(kalori_info: dict, df_filtered: pd.DataFrame, kategori: str,
 
 
 # ==========================================================================
-# MODUL 5 — GEMINI LLM NARASI REKOMENDASI
+# [3.3.4] MODEL DAN ARSITEKTUR — LAYER 4: GENREATIVE LLM (GEMINI)
 # ==========================================================================
 
 def _get_gemini_client():
