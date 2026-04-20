@@ -72,6 +72,7 @@ export default function Register() {
         name: registerData.fullName,
         email: registerData.email,
         password: registerData.password,
+        callbackURL: '/login',
       });
 
       if (error) {
