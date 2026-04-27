@@ -26,10 +26,15 @@ function createParameter(
 export async function createMidtransTransaction(
   order_id: string,
   gross_amount: number,
-): Promise<SnapTransactionResponse> {
+): Promise<{ token: string; redirect_url: string }> {
   const parameter = createParameter(order_id, gross_amount);
-  const transaction = await midtrans_snap.createTransaction(parameter);
-  return transaction;
+  const transaction = (await midtrans_snap.createTransaction(
+    parameter,
+  )) as SnapTransactionResponse & { token: string };
+  return {
+    token: transaction.token,
+    redirect_url: transaction.redirect_url,
+  };
 }
 
 /**

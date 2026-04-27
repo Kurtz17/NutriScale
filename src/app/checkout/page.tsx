@@ -11,6 +11,23 @@ import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
 
+// Type declaration untuk Midtrans Snap.js
+declare global {
+  interface Window {
+    snap: {
+      pay: (
+        token: string,
+        options: {
+          onSuccess?: () => void;
+          onPending?: () => void;
+          onError?: () => void;
+          onClose?: () => void;
+        },
+      ) => void;
+    };
+  }
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, fetchCart } = useCartStore();
@@ -56,9 +73,24 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Terjadi kesalahan saat checkout');
       }
 
-      if (data.redirectUrl) {
+      if (data.snapToken) {
         localStorage.removeItem('nutriscale-cart');
-        window.location.href = data.redirectUrl;
+
+        window.snap.pay(data.snapToken, {
+          onSuccess: () => {
+            router.push('/order-history');
+          },
+          onPending: () => {
+            router.push('/order-history');
+          },
+          onError: () => {
+            alert('Pembayaran gagal. Silakan coba lagi.');
+            setIsPending(false);
+          },
+          onClose: () => {
+            setIsPending(false);
+          },
+        });
       }
     } catch (error) {
       console.error('Payment Error:', error);
@@ -67,7 +99,6 @@ export default function CheckoutPage() {
           ? error.message
           : 'Terjadi kesalahan saat memproses pembayaran',
       );
-    } finally {
       setIsPending(false);
     }
   };
