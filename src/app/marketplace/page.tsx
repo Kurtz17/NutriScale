@@ -237,10 +237,9 @@ export default function MarketplacePage() {
                           <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg p-1 border border-gray-100">
                             <button
                               onClick={() =>
-                                updateQuantity(
-                                  item.id,
-                                  Math.max(1, item.quantity - 1),
-                                )
+                                item.quantity === 1
+                                  ? removeFromCart(item.id)
+                                  : updateQuantity(item.id, item.quantity - 1)
                               }
                               className="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-md text-lg leading-none"
                             >
@@ -253,7 +252,17 @@ export default function MarketplacePage() {
                               onClick={() =>
                                 updateQuantity(item.id, item.quantity + 1)
                               }
-                              className="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-md text-lg leading-none"
+                              disabled={
+                                item.stok !== null &&
+                                item.quantity >= (item.stok ?? Infinity)
+                              }
+                              title={
+                                item.stok !== null &&
+                                item.quantity >= (item.stok ?? Infinity)
+                                  ? `Stok tersedia hanya ${item.stok}`
+                                  : undefined
+                              }
+                              className="w-6 h-6 flex items-center justify-center rounded-md text-lg leading-none disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 hover:bg-gray-200 disabled:hover:bg-transparent"
                             >
                               +
                             </button>

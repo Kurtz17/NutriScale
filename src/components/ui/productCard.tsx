@@ -14,21 +14,40 @@ export interface Product {
   calories: number;
   protein: number;
   price: number;
+  stok: number | null;
 }
 
 const ProductCard: React.FC<{
   product: Product;
   onAdd: (product: Product) => void;
 }> = ({ product, onAdd }) => {
+  const stok = product.stok;
+  const outOfStock = stok !== null && stok <= 0;
+  const lowStock = stok !== null && stok > 0 && stok <= 5;
+
   return (
     <Card className="rounded-3xl border-none shadow-sm flex flex-col gap-4 p-4 bg-white">
       <CardContent className="p-0">
-        <div className="flex justify-center">
+        <div className="flex justify-center relative">
           <div className="bg-gray-50 rounded-2xl w-full flex items-center justify-center py-8 border border-gray-100">
             <span className="text-6xl transition-transform duration-500 group-hover:scale-110">
               {product.image}
             </span>
           </div>
+          {/* Badge Stok */}
+          {stok !== null && (
+            <span
+              className={`absolute top-2 right-2 text-[10px] font-black px-2.5 py-1 rounded-full ${
+                outOfStock
+                  ? 'bg-red-100 text-red-600'
+                  : lowStock
+                    ? 'bg-yellow-100 text-yellow-700'
+                    : 'bg-green-100 text-green-700'
+              }`}
+            >
+              {outOfStock ? 'Habis' : `Stok: ${stok}`}
+            </span>
+          )}
         </div>
 
         <div className="flex gap-2 mt-4">
@@ -83,10 +102,15 @@ const ProductCard: React.FC<{
           </p>
         </div>
         <Button
-          className="bg-black text-white rounded-xl hover:bg-gray-800"
-          onClick={() => onAdd(product)}
+          className={`rounded-xl text-white ${
+            outOfStock
+              ? 'bg-gray-300 cursor-not-allowed hover:bg-gray-300'
+              : 'bg-black hover:bg-gray-800'
+          }`}
+          onClick={() => !outOfStock && onAdd(product)}
+          disabled={outOfStock}
         >
-          + Add
+          {outOfStock ? 'Habis' : '+ Add'}
         </Button>
       </CardFooter>
     </Card>
