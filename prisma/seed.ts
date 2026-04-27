@@ -26,6 +26,7 @@ async function main() {
         protein: 3,
       },
       harga: 25000,
+      stok: 100,
     },
     {
       id: '2',
@@ -40,6 +41,7 @@ async function main() {
         protein: 31,
       },
       harga: 45000,
+      stok: 100,
     },
     {
       id: '3',
@@ -54,6 +56,7 @@ async function main() {
         protein: 10,
       },
       harga: 20000,
+      stok: 100,
     },
     {
       id: '4',
@@ -68,6 +71,7 @@ async function main() {
         protein: 22,
       },
       harga: 75000,
+      stok: 100,
     },
     {
       id: '5',
@@ -82,6 +86,7 @@ async function main() {
         protein: 2,
       },
       harga: 15000,
+      stok: 100,
     },
     {
       id: '6',
@@ -96,6 +101,7 @@ async function main() {
         protein: 0,
       },
       harga: 30000,
+      stok: 100,
     },
   ];
 
@@ -108,6 +114,7 @@ async function main() {
         gambar: p.gambar,
         nilaiGizi: p.nilaiGizi,
         harga: p.harga,
+        stok: p.stok,
       },
     });
   }

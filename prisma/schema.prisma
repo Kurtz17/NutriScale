@@ -92,6 +92,7 @@ model Verification {
 }
 
 enum StatusPesanan {
+  TERTUNDA
   DIPROSES
   DIKIRIM
   SELESAI

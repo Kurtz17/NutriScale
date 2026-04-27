@@ -1,7 +1,7 @@
 'use client';
 import { authClient } from '@/lib/auth-client';
 import { useCartStore } from '@/lib/store/useCartStore';
-import { LogOut, ShoppingCart, User } from 'lucide-react';
+import { LogOut, Package, ShoppingCart, User } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -165,6 +165,16 @@ export default function Navbar() {
                       >
                         <User className="w-4 h-4 text-slate-500" /> Profile
                         Settings
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          router.push('/order-history');
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 font-medium hover:bg-slate-50 rounded-xl"
+                      >
+                        <Package className="w-4 h-4 text-slate-500" /> Order
+                        History
                       </button>
                       <button
                         onClick={handleLogout}
