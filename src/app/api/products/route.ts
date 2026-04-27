@@ -11,6 +11,7 @@ export async function GET() {
       gambar: string | null;
       harga: unknown;
       nilaiGizi: unknown;
+      stok: number | null;
     };
     const mappedProducts = (products as ProdukRow[]).map((p) => {
       const gizi = (p.nilaiGizi as Record<string, unknown>) || {};
@@ -20,6 +21,7 @@ export async function GET() {
         category: p.kategori,
         image: p.gambar,
         price: Number(p.harga || 0),
+        stok: p.stok,
         badges: {
           healthSafe: Boolean(gizi.healthSafe),
           aiRecommended: Boolean(gizi.aiRecommended),

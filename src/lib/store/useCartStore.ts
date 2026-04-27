@@ -40,6 +40,12 @@ export const useCartStore = create<CartState>((set, get) => ({
   addToCart: async (product) => {
     const { cart } = get();
     const existing = cart.find((item) => item.id === product.id);
+    const stok = product.stok;
+
+    // Jangan tambah jika sudah mencapai batas stok
+    if (existing && stok !== null && existing.quantity >= stok) {
+      return;
+    }
 
     // Optimistic update
     if (existing) {
@@ -67,11 +73,19 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   updateQuantity: async (productId, quantity) => {
+    const { cart } = get();
+    const item = cart.find((i) => i.id === productId);
+    const stok = item?.stok;
+
+    // Batasi quantity sesuai stok yang tersedia
+    const clampedQty =
+      stok !== null && stok !== undefined
+        ? Math.min(Math.max(1, quantity), stok)
+        : Math.max(1, quantity);
+
     set({
-      cart: get().cart.map((item) =>
-        item.id === productId
-          ? { ...item, quantity: Math.max(1, quantity) }
-          : item,
+      cart: cart.map((i) =>
+        i.id === productId ? { ...i, quantity: clampedQty } : i,
       ),
     });
 
@@ -81,7 +95,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: String(productId),
-          quantity: quantity,
+          quantity: clampedQty,
           setExact: true,
         }),
       });
