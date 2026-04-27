@@ -87,7 +87,7 @@ export async function POST(req: Request) {
     const midtransRes = await createMidtransTransaction(pesanan.id, totalHarga);
 
     return NextResponse.json({
-      redirectUrl: midtransRes.redirect_url,
+      snapToken: midtransRes.token,
     });
   } catch (error) {
     console.error('Checkout error:', error);

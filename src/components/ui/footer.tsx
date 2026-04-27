@@ -44,7 +44,7 @@ export default function Footer() {
                 Marketplace
               </li>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/health-dashboard">
               <li className="hover:text-black cursor-pointer transition-colors">
                 Dashboard
               </li>
