@@ -36,9 +36,13 @@ export async function GET() {
           item.produk.nilaiGizi &&
           typeof item.produk.nilaiGizi === 'object'
         ) {
-          const gizi = item.produk.nilaiGizi as { kalori?: number };
-          if (gizi.kalori) {
-            itemCalories = Number(gizi.kalori) * item.kuantitas;
+          const gizi = item.produk.nilaiGizi as {
+            kalori?: number;
+            calories?: number;
+          };
+          const cal = gizi.calories || gizi.kalori;
+          if (cal) {
+            itemCalories = Number(cal) * item.kuantitas;
           }
         }
         totalCalories += itemCalories;

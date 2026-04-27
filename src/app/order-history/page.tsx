@@ -278,12 +278,15 @@ export default function OrderHistoryPage() {
                             <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-tighter">
                               <span>Subtotal Items</span>
                               <span>
-                                Rp {order.totalPrice.toLocaleString('id-ID')}
+                                Rp{' '}
+                                {(order.totalPrice - 15000).toLocaleString(
+                                  'id-ID',
+                                )}
                               </span>
                             </div>
                             <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-tighter">
                               <span>Shipping Fee</span>
-                              <span className="text-[#7CB342]">FREE</span>
+                              <span className="text-[#1A1A1B]">Rp 15.000</span>
                             </div>
                             <div className="flex justify-between text-lg font-black text-[#1A1A1B] pt-3 border-t border-gray-200">
                               <span>Grand Total</span>
