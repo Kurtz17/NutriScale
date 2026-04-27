@@ -44,25 +44,29 @@ export default function CheckoutPage() {
     setIsPending(true);
 
     try {
-      const response = await fetch('/api/tokenizer', {
+      const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cartItems: cart }),
       });
 
-      const { token } = await response.json();
+      const data = await response.json();
 
-      // @ts-expect-error window.snap is provided by Midtrans Script
-      window.snap.pay(token, {
-        onSuccess: () => {
-          alert('Pembayaran Berhasil!');
-          localStorage.removeItem('nutriscale-cart');
-          router.push('/dashboard');
-        },
-        onClose: () => alert('Selesaikan pembayaranmu nanti ya!'),
-      });
+      if (!response.ok) {
+        throw new Error(data.error || 'Terjadi kesalahan saat checkout');
+      }
+
+      if (data.redirectUrl) {
+        localStorage.removeItem('nutriscale-cart');
+        window.location.href = data.redirectUrl;
+      }
     } catch (error) {
       console.error('Payment Error:', error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Terjadi kesalahan saat memproses pembayaran',
+      );
     } finally {
       setIsPending(false);
     }
