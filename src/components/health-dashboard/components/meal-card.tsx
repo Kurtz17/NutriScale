@@ -11,8 +11,13 @@ interface Meal {
   type: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack';
 }
 
-export default function MealCard({ meal }: { meal: Meal }) {
-  // 🔹 emoji/icon berdasarkan tipe meal
+interface MealCardProps {
+  meal: Meal;
+  isChecked: boolean;
+  onToggle: () => void;
+}
+
+export default function MealCard({ meal, isChecked, onToggle }: MealCardProps) {
   const getMealIcon = () => {
     switch (meal.type) {
       case 'Breakfast':
@@ -29,11 +34,41 @@ export default function MealCard({ meal }: { meal: Meal }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition duration-300 p-5 w-full">
+    <div
+      onClick={onToggle}
+      className={`rounded-2xl shadow-md hover:shadow-lg transition duration-300 p-5 w-full cursor-pointer border-2 ${
+        isChecked
+          ? 'bg-green-50 border-green-400'
+          : 'bg-white border-transparent'
+      }`}
+    >
       {/* HEADER */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-gray-600">{meal.type}</span>
-
+        <div className="flex items-center gap-2">
+          {/* CHECKBOX */}
+          <div
+            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
+              isChecked ? 'bg-green-500 border-green-500' : 'border-gray-300'
+            }`}
+          >
+            {isChecked && (
+              <svg
+                className="w-3 h-3 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+          </div>
+          <span className="text-sm font-medium text-gray-600">{meal.type}</span>
+        </div>
         <span className="text-xl">{getMealIcon()}</span>
       </div>
 
@@ -54,7 +89,6 @@ export default function MealCard({ meal }: { meal: Meal }) {
           <Flame className="w-4 h-4" />
           <span>{meal.calories} kcal</span>
         </div>
-
         <div className="flex items-center gap-1 text-gray-600">
           <Drumstick className="w-4 h-4" />
           <span>{meal.protein}g protein</span>
@@ -66,12 +100,23 @@ export default function MealCard({ meal }: { meal: Meal }) {
         {meal.tags.map((tag, index) => (
           <span
             key={index}
-            className="text-xs px-3 py-1 rounded-full bg-[#E6F4EA] text-[#4B7F6B]"
+            className={`text-xs px-3 py-1 rounded-full transition ${
+              isChecked
+                ? 'bg-green-100 text-green-700'
+                : 'bg-[#E6F4EA] text-[#4B7F6B]'
+            }`}
           >
             {tag}
           </span>
         ))}
       </div>
+
+      {/* CONSUMED LABEL */}
+      {isChecked && (
+        <p className="text-xs text-green-600 font-medium mt-3">
+          ✓ Sudah dikonsumsi
+        </p>
+      )}
     </div>
   );
 }
