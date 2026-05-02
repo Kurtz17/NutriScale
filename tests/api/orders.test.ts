@@ -72,6 +72,13 @@ describe('API Orders', () => {
     expect(response.status).toBe(200);
     expect(data.orders).toHaveLength(2);
 
+    // Verify Data Isolation: Ensure query is filtered by user ID
+    expect(prisma.pesanan.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: MOCK_SESSION.user.id },
+      }),
+    );
+
     // Cek Order 1 (Format Tanggal & Kalori)
     expect(data.orders[0]).toMatchObject({
       id: 'ord_1',
