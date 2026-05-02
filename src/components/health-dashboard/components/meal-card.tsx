@@ -1,17 +1,14 @@
 'use client';
 
-import { Clock, Drumstick, Flame } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useCartStore } from '@/lib/store/useCartStore';
+import { Clock, Drumstick, Flame, ShoppingCart } from 'lucide-react';
 
-interface Meal {
-  title: string;
-  time: string;
-  calories: number;
-  protein: number;
-  tags: string[];
-  type: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack';
-}
+import { Meal } from '../types';
 
 export default function MealCard({ meal }: { meal: Meal }) {
+  const addToCart = useCartStore((state) => state.addToCart);
+
   // 🔹 emoji/icon berdasarkan tipe meal
   const getMealIcon = () => {
     switch (meal.type) {
@@ -26,6 +23,25 @@ export default function MealCard({ meal }: { meal: Meal }) {
       default:
         return '🍴';
     }
+  };
+
+  const handleAdd = () => {
+    if (!meal.productId) return;
+
+    const productToAdd = {
+      id: meal.productId,
+      name: meal.title,
+      category: 'AI Recommendation',
+      image: meal.image || getMealIcon(),
+      badges: { healthSafe: true, aiRecommended: true },
+      tags: meal.tags,
+      calories: meal.calories,
+      protein: meal.protein,
+      price: meal.price || 0,
+      stok: 99,
+    };
+
+    addToCart(productToAdd, meal.recommended_quantity || 1);
   };
 
   return (
@@ -72,6 +88,26 @@ export default function MealCard({ meal }: { meal: Meal }) {
           </span>
         ))}
       </div>
+
+      {/* ACTION */}
+      {meal.productId && (
+        <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="text-xs text-gray-500 flex flex-col">
+            <span className="font-bold text-gray-800">
+              {meal.recommended_quantity || 1} Porsi
+            </span>
+            <span>Rekomendasi AI</span>
+          </div>
+          <Button
+            onClick={handleAdd}
+            size="sm"
+            className="rounded-xl bg-black hover:bg-gray-800 text-white flex items-center gap-2 shadow-sm"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Add to Cart
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

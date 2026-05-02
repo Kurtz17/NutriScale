@@ -49,9 +49,16 @@ export default function StatCard({ stat }: StatCardProps) {
               value={stat.progress}
               color={stat.title === 'Protein Intake' ? 'green' : 'blue'}
             />
-            <p className="text-xs text-gray-400 mt-1">
-              {stat.progress}% of goal
-            </p>
+            <div className="flex justify-between items-center mt-1">
+              <p className="text-xs text-gray-400">
+                {Math.round(stat.progress)}% of goal
+              </p>
+              {stat.progress > 100 && (
+                <p className="text-xs text-red-500 font-semibold animate-pulse">
+                  ⚠️ Limit exceeded!
+                </p>
+              )}
+            </div>
           </div>
         )}
 

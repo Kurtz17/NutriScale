@@ -7,6 +7,10 @@ export interface Stat {
 }
 
 export interface Meal {
+  productId?: string;
+  image?: string;
+  price?: number;
+  recommended_quantity?: number;
   title: string;
   time: string;
   calories: number;

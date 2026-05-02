@@ -2,25 +2,31 @@
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
-const data = [
-  { day: 'Mon', protein: 30 },
-  { day: 'Tue', protein: 40 },
-  { day: 'Wed', protein: 35 },
-  { day: 'Thu', protein: 50 },
-  { day: 'Fri', protein: 45 },
-  { day: 'Sat', protein: 55 },
-  { day: 'Sun', protein: 48 },
-];
+export default function ProteinChart({
+  targetProtein = 50,
+}: {
+  targetProtein?: number;
+}) {
+  const data = [
+    { day: 'Mon', target: targetProtein },
+    { day: 'Tue', target: targetProtein },
+    { day: 'Wed', target: targetProtein },
+    { day: 'Thu', target: targetProtein },
+    { day: 'Fri', target: targetProtein },
+    { day: 'Sat', target: targetProtein },
+    { day: 'Sun', target: targetProtein },
+  ];
 
-export default function ProteinChart() {
   return (
     <div className="bg-white rounded-2xl shadow-md p-5 w-full">
       {/* TITLE */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
-          Protein Intake Progress
+          Recommended Protein Intake
         </h3>
-        <p className="text-sm text-gray-500">Your weekly protein consumption</p>
+        <p className="text-sm text-gray-500">
+          Your daily protein target for the week
+        </p>
       </div>
 
       {/* CHART */}
@@ -43,7 +49,7 @@ export default function ProteinChart() {
 
             <Line
               type="monotone"
-              dataKey="protein"
+              dataKey="target"
               stroke="#57aa70"
               strokeWidth={3}
               dot={{ r: 4 }}

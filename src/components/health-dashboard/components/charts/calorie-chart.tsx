@@ -2,25 +2,31 @@
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
-const data = [
-  { day: 'Mon', calories: 1200 },
-  { day: 'Tue', calories: 1400 },
-  { day: 'Wed', calories: 1300 },
-  { day: 'Thu', calories: 1600 },
-  { day: 'Fri', calories: 1450 },
-  { day: 'Sat', calories: 1700 },
-  { day: 'Sun', calories: 1500 },
-];
+export default function CalorieChart({
+  targetCalories = 2000,
+}: {
+  targetCalories?: number;
+}) {
+  const data = [
+    { day: 'Mon', target: targetCalories },
+    { day: 'Tue', target: targetCalories },
+    { day: 'Wed', target: targetCalories },
+    { day: 'Thu', target: targetCalories },
+    { day: 'Fri', target: targetCalories },
+    { day: 'Sat', target: targetCalories },
+    { day: 'Sun', target: targetCalories },
+  ];
 
-export default function CalorieChart() {
   return (
     <div className="bg-white rounded-2xl shadow-md p-5 w-full">
       {/* TITLE */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
-          Calorie Intake Progress
+          Recommended Calorie Intake
         </h3>
-        <p className="text-sm text-gray-500">Your weekly calorie consumption</p>
+        <p className="text-sm text-gray-500">
+          Your daily calorie target for the week
+        </p>
       </div>
 
       {/* CHART */}
@@ -43,7 +49,7 @@ export default function CalorieChart() {
 
             <Line
               type="monotone"
-              dataKey="calories"
+              dataKey="target"
               stroke="#4c7dc1"
               strokeWidth={3}
               dot={{ r: 4 }}

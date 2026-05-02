@@ -40,6 +40,8 @@ export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  const [targetCalories, setTargetCalories] = useState(2000);
+
   // Load products and cart
   useEffect(() => {
     const loadData = async () => {
@@ -47,7 +49,16 @@ export default function MarketplacePage() {
         const res = await fetch('/api/products');
         if (res.ok) {
           const data = await res.json();
-          setProducts(data);
+          // API returns { targetCalories, products }
+          if (data.products && Array.isArray(data.products)) {
+            setProducts(data.products);
+            if (data.targetCalories) {
+              setTargetCalories(data.targetCalories);
+            }
+          } else {
+            // fallback if it's still returning flat array
+            setProducts(data);
+          }
         }
       } catch (error) {
         console.error('Failed to load products:', error);
@@ -196,9 +207,24 @@ export default function MarketplacePage() {
                 <p className="font-bold text-2xl text-black">
                   {totalCalories} kcal
                 </p>
-                <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                  <span className="text-green-500">✓</span> Balanced selection
-                </p>
+
+                {cart.length === 0 ? (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Add items to check balance
+                  </p>
+                ) : totalCalories > targetCalories ? (
+                  <p className="text-xs text-red-500 font-semibold flex items-center gap-1 mt-1 animate-pulse">
+                    ⚠️ Exceeds daily needs
+                  </p>
+                ) : totalCalories < targetCalories * 0.5 ? (
+                  <p className="text-xs text-yellow-500 font-medium flex items-center gap-1 mt-1">
+                    <span>⚠️</span> Below daily target
+                  </p>
+                ) : (
+                  <p className="text-xs text-green-500 font-medium flex items-center gap-1 mt-1">
+                    <span>✓</span> Balanced selection
+                  </p>
+                )}
               </div>
 
               <ScrollArea className="h-[380px] pr-4 -mr-4">

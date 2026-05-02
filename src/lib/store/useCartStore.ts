@@ -8,7 +8,7 @@ export type CartItem = Product & {
 interface CartState {
   cart: CartItem[];
   isLoading: boolean;
-  addToCart: (product: Product) => Promise<void>;
+  addToCart: (product: Product, quantityToAdd?: number) => Promise<void>;
   updateQuantity: (
     productId: string | number,
     quantity: number,
@@ -37,13 +37,13 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  addToCart: async (product) => {
+  addToCart: async (product, quantityToAdd = 1) => {
     const { cart } = get();
     const existing = cart.find((item) => item.id === product.id);
     const stok = product.stok;
 
     // Jangan tambah jika sudah mencapai batas stok
-    if (existing && stok !== null && existing.quantity >= stok) {
+    if (existing && stok !== null && existing.quantity + quantityToAdd > stok) {
       return;
     }
 
@@ -52,19 +52,22 @@ export const useCartStore = create<CartState>((set, get) => ({
       set({
         cart: cart.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantityToAdd }
             : item,
         ),
       });
     } else {
-      set({ cart: [...cart, { ...product, quantity: 1 }] });
+      set({ cart: [...cart, { ...product, quantity: quantityToAdd }] });
     }
 
     try {
       await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: String(product.id), quantity: 1 }),
+        body: JSON.stringify({
+          productId: String(product.id),
+          quantity: quantityToAdd,
+        }),
       });
     } catch (error) {
       console.error('Failed to add to cart on server', error);
