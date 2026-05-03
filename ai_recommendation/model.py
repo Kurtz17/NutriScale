@@ -183,6 +183,9 @@ def load_and_preprocess_api_data(api_url: str) -> tuple[pd.DataFrame, dict]:
         # Kembalikan dataframe kosong jika gagal
         return pd.DataFrame(), {}
         
+    if isinstance(data, dict) and 'products' in data:
+        data = data['products']
+        
     df = pd.DataFrame(data)
     if len(df) == 0:
         return df, {}
