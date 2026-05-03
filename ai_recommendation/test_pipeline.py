@@ -23,7 +23,7 @@ import sys
 import json
 import warnings
 import argparse
-from model import load_and_preprocess_kaggle_data, jalankan_ai_rekomendasi
+from model import load_and_preprocess_api_data, jalankan_ai_rekomendasi
 
 warnings.filterwarnings('ignore')
 
@@ -213,13 +213,13 @@ def run_tests(use_llm: bool = False, verbose: bool = False, validate: bool = Tru
         print("   Narasi LLM akan menggunakan fallback template.\n")
 
     # --- Load Dataset ---
-    csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'nutrition.csv')
-    if not os.path.exists(csv_path):
-        print(f"\nERROR: File tidak ditemukan: {csv_path}")
-        print("  Pastikan file 'nutrition.csv' ada di folder 'data/'")
+    api_url = os.environ.get("NEXT_PUBLIC_APP_URL", "http://localhost:3000") + "/api/products"
+    
+    df_food, scaler_dict = load_and_preprocess_api_data(api_url)
+    if len(df_food) == 0:
+        print(f"\nERROR: Gagal memuat data dari {api_url}")
+        print("  Pastikan server Next.js sedang berjalan di port 3000")
         sys.exit(1)
-
-    df_food, scaler_dict = load_and_preprocess_kaggle_data(csv_path)
     print(f"\nOK: Dataset loaded: {len(df_food)} makanan\n")
 
     # --- Jalankan Tests ---

@@ -11,7 +11,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from model import load_and_preprocess_kaggle_data, jalankan_ai_rekomendasi
+from model import load_and_preprocess_api_data, jalankan_ai_rekomendasi
 
 # ==========================================================
 # GLOABAL STATE: PRE-LOAD DATASET & SCALER KE MEMORY RAM
@@ -36,14 +36,15 @@ limiter = Limiter(key_func=get_remote_address)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global df_dataset, scaler_dict
-    print("\n[API Startup] Memuat Dataset Makanan Kaggle...")
-    csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'nutrition.csv')
     
-    if not os.path.exists(csv_path):
-        print(f"[API Startup WARNING] Dataset di {csv_path} TIDAK Ditemukan! API akan berjalan fallback.")
-        # Kita membiarkan server jalan (Graceful degraded mode) tanpa model
+    api_url = os.environ.get("NEXT_PUBLIC_APP_URL", "http://localhost:3000") + "/api/products"
+    print(f"\n[API Startup] Memuat Dataset Makanan dari {api_url}...")
+    
+    df_dataset, scaler_dict = load_and_preprocess_api_data(api_url)
+    
+    if df_dataset is None or len(df_dataset) == 0:
+        print(f"[API Startup WARNING] Gagal memuat dataset dari {api_url}! API berjalan fallback (Offline).")
     else:
-        df_dataset, scaler_dict = load_and_preprocess_kaggle_data(csv_path)
         print(f"[API Startup] Dataset dimuat: {len(df_dataset)} Makanan Tersedia beserta Scaler.")
     
     yield  

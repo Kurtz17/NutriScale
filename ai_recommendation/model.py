@@ -23,6 +23,7 @@ import re
 import json
 import warnings
 import numpy as np
+import requests
 import pandas as pd
 from typing import Optional
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -167,27 +168,34 @@ def build_tfidf_content_matrix(df: pd.DataFrame) -> tuple[np.ndarray, TfidfVecto
     return tfidf_matrix, vectorizer
 
 
-def load_and_preprocess_kaggle_data(csv_path: str) -> tuple[pd.DataFrame, dict]:
+def load_and_preprocess_api_data(api_url: str) -> tuple[pd.DataFrame, dict]:
     """
-    Load + preprocess dataset Kaggle nutrition.csv.
+    Load + preprocess dataset dari Next.js API.
     Menghasilkan tuple: (DataFrame, Dict Scaler untuk setiap kategori).
     """
-    print("[Pipeline] Loading Kaggle dataset...")
-    df = pd.read_csv(csv_path)
+    print(f"[Pipeline] Fetching data from {api_url}...")
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"[Pipeline Error] Gagal fetch API: {e}")
+        # Kembalikan dataframe kosong jika gagal
+        return pd.DataFrame(), {}
+        
+    df = pd.DataFrame(data)
+    if len(df) == 0:
+        return df, {}
+
     df = df.dropna(subset=['name'])
 
-    # --- Normalisasi kolom numerik ---
-    expected_cols = ['calories', 'total_fat', 'protein', 'carbohydrate', 'sodium', 'cholesterol', 'sugars']
+    # Ensure numeric columns
+    expected_cols = ['calories', 'protein', 'fat', 'carbs', 'sodium', 'cholesterol', 'sugars']
     for col in expected_cols:
-        if col in df.columns:
-            df[col] = df[col].apply(extract_numeric)
-        else:
+        if col not in df.columns:
             df[col] = 0.0
-
-    # Rename untuk konsistensi internal
-    if 'fat' in df.columns:
-        df = df.drop(columns=['fat'])
-    df = df.rename(columns={'carbohydrate': 'carbs', 'total_fat': 'fat'})
+        else:
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0.0)
 
     # --- Filter dasar ---
     df = df[df['calories'] > 10].copy()
@@ -201,7 +209,11 @@ def load_and_preprocess_kaggle_data(csv_path: str) -> tuple[pd.DataFrame, dict]:
     df['vitamin_score'] = [m['vitamin_score'] for m in micronutrients]
 
     # Label allergen & kategori
-    df['label_risiko']  = df['name'].apply(lambda x: ','.join(detect_allergens(x)))
+    if 'label_risiko' not in df.columns:
+        df['label_risiko'] = ''
+    else:
+        df['label_risiko'] = df['label_risiko'].fillna('')
+        
     df['category_tags'] = df.apply(classify_category_suitability, axis=1)
 
     # Nutrient density score (protein + micronutrients per 100 kalori)
@@ -221,9 +233,11 @@ def load_and_preprocess_kaggle_data(csv_path: str) -> tuple[pd.DataFrame, dict]:
     for cat, weights in FEATURE_WEIGHTS.items():
         numeric_feats = [f for f in weights.keys() if f in df.columns]
         if numeric_feats:
-            sc = StandardScaler()
+            # Gunakan MinMax dibandingkan Standard Scaler karena nilai absolut lebih penting
+            sc = MinMaxScaler()
             matrix = df[numeric_feats].values.astype(float)
-            sc.fit(matrix)
+            if matrix.shape[0] > 0:
+                sc.fit(matrix)
             scalers[cat] = {'scaler': sc, 'features': numeric_feats}
             
     return df.reset_index(drop=True), scalers
@@ -246,32 +260,40 @@ def calculate_bmi(weight_kg: float, height_cm: float) -> float:
     return round(weight_kg / (h ** 2), 2) if h > 0 else 0.0
 
 
-def assess_nutritional_status(umur, jenisKelamin, beratBadan, tinggiBadan) -> dict:
+def assess_nutritional_status(umur, jenisKelamin, beratBadan, tinggiBadan, kategori) -> dict:
     """
-    Asesmen status gizi sesuai standar WHO.
+    Asesmen status gizi sesuai standar CDC.
+    Adults: >= 20 years. Children/Teens: 2-19 years.
     Output strict mapping ke Prisma RiwayatAnalisis schema.
     """
     umur = int(umur or 20)
     bmi  = calculate_bmi(float(beratBadan), float(tinggiBadan))
 
-    if umur < 19:
-        # Z-score BMI-for-age (WHO simplified)
+    # CDC: BMI is not accurate for pregnant women.
+    if kategori == 'IBU_HAMIL':
+        return {'bmi': bmi, 'haz': 0.0, 'whz': 0.0, 'lila': None, 'statusNutrisi': 'Pregnant (Monitoring)'}
+
+    # Anak Balita atau Child/Teen (< 20 tahun)
+    if umur < 20 or kategori == 'ANAK_BALITA':
+        # CDC Child/Teen percentiles approximated via Z-scores:
+        # < 5th percentile (~ z < -1.645) -> Underweight
+        # 5th to < 85th percentile -> Healthy Weight (Normal)
+        # 85th to < 95th percentile (~ z >= 1.036) -> Overweight
+        # >= 95th percentile (~ z >= 1.645) -> Obese
         median = _CHILD_BMI_MEDIAN.get(umur, 16.5 + 0.5 * max(0, umur - 5))
-        sd     = median * 0.12  # approximasi SD ~12% median
+        sd     = median * 0.12
         z      = round((bmi - median) / sd, 2) if sd > 0 else 0.0
 
-        if z < -3:    status = "Severely Underweight"
-        elif z < -2:  status = "Underweight"
-        elif z <= 1:  status = "Normal"
-        elif z <= 2:  status = "Overweight"
-        else:         status = "Obese"
+        if z < -1.645:   status = "Underweight"
+        elif z < 1.036:  status = "Normal"
+        elif z < 1.645:  status = "Overweight"
+        else:            status = "Obese"
 
         return {'bmi': bmi, 'haz': z, 'whz': z, 'lila': None, 'statusNutrisi': status}
 
     else:
-        # BMI dewasa WHO
-        if bmi < 17.0:   status = "Severely Underweight"
-        elif bmi < 18.5: status = "Underweight"
+        # CDC Adult BMI (>= 20 years old)
+        if bmi < 18.5:   status = "Underweight"
         elif bmi < 25.0: status = "Normal"
         elif bmi < 30.0: status = "Overweight"
         else:            status = "Obese"
@@ -303,7 +325,6 @@ def calculate_daily_calories(umur, jenisKelamin, beratBadan, tinggiBadan,
 
         # Koreksi status gizi
         adjustments = {
-            "Severely Underweight": +700,
             "Underweight":          +500,
             "Overweight":           -300,
             "Obese":                -500,
@@ -342,6 +363,9 @@ def filter_dataset(df: pd.DataFrame, pantanganMedis: Optional[str], kategoriKond
     1. Allergen/pantangan medis (exact + partial match)
     2. Kelayakan kategori kondisi
     """
+    if df is None or len(df) == 0 or 'label_risiko' not in df.columns:
+        return pd.DataFrame()
+
     pantangan = [p.strip().lower() for p in pantanganMedis.split(',')] if pantanganMedis else []
 
     def is_safe(label_risiko_str: str) -> bool:
@@ -445,7 +469,8 @@ def recommend_meal(
             
         # 2. Local Proxy Preference (Prefer whole foods / Indonesia equivalent basics)
         local_kw = ['rice', 'chicken', 'soup', 'tofu', 'tempe', 'spinach', 'bean', 'fish', 'egg', 'potato']
-        if any(lw in n for lw in local_kw):
+        cat = str(df.iloc[i].get('category', '')).lower()
+        if any(lw in n for lw in local_kw) or 'vegetable' in cat or 'fruit' in cat:
             context_boost[i] += 0.15
             
         # 3. Keterkaitan Waktu Makan (Temporal Awareness)
@@ -461,7 +486,8 @@ def recommend_meal(
             
         elif meal_type in ['siang', 'malam']:
             heavy_kw = ['rice', 'chicken', 'beef', 'fish', 'vegetable', 'soup', 'salad', 'potatoes']
-            if any(k in n for k in heavy_kw): context_boost[i] += 0.2
+            cat = str(df.iloc[i].get('category', '')).lower()
+            if any(k in n for k in heavy_kw) or 'vegetable' in cat: context_boost[i] += 0.25
             if 'cereal' in n or 'oat' in n: context_boost[i] -= 0.2
 
     final_score = sims + nutrient_boost - glycemic_penalty + context_boost
@@ -475,15 +501,27 @@ def recommend_meal(
     for _, row in result_df.iterrows():
         food_name = str(row['name'])
         used_foods.add(food_name.lower()) # Blokir repitisi di cycle selanjutnya
+        
+        # Kalkulasi recommended_quantity
+        food_calories = float(row['calories'])
+        if food_calories > 0:
+            recommended_quantity = max(1, int(round(target_kalori / food_calories)))
+        else:
+            recommended_quantity = 1
+            
         records.append({
+            'produk_id':    row.get('id', ''),
             'nama_makanan': food_name,
-            'calories':     round(float(row['calories']), 1),
+            'gambar':       row.get('image', ''),
+            'harga':        float(row.get('price', 0)),
+            'calories':     round(food_calories, 1),
             'protein':      round(float(row['protein']), 1),
             'fat':          round(float(row['fat']), 1),
             'carbs':        round(float(row['carbs']), 1),
             'match_score':  row['match_score'],
             'allergen_info': row['label_risiko'] or 'Tidak ada',
             'nutrient_density': round(float(row['nutrient_density']), 2),
+            'recommended_quantity': recommended_quantity,
         })
     return records
 
@@ -613,10 +651,10 @@ def _fallback_narasi(profil: dict, riwayat: dict, kalori_info: dict, pantangan: 
 
     pesan = {
         'Underweight':          "Berat badan Anda saat ini di bawah ideal. Fokus pada peningkatan asupan kalori dan protein berkualitas tinggi.",
-        'Severely Underweight': "Status gizi Anda memerlukan perhatian segera. Sangat disarankan konsultasi langsung dengan dokter gizi.",
         'Overweight':           "Berat badan Anda sedikit di atas ideal. Kurangi makanan tinggi lemak jenuh dan gula tambahan.",
         'Obese':                "Diperlukan penurunan berat badan secara bertahap. Hindari makanan ultra-processed dan perbanyak sayuran.",
         'Normal':               "Status gizi Anda dalam kondisi baik. Pertahankan pola makan seimbang dan aktifitas fisik rutin.",
+        'Pregnant (Monitoring)': "Fokus pada pemenuhan nutrisi esensial seperti asam folat dan zat besi untuk mendukung kehamilan."
     }
 
     base = pesan.get(status, pesan['Normal'])
@@ -641,7 +679,7 @@ def jalankan_ai_rekomendasi(
 
     Parameter:
         profil_kesehatan_dict : dict sesuai Prisma model ProfilKesehatan
-        dataset_dataframe     : pd.DataFrame hasil load_and_preprocess_kaggle_data()
+        dataset_dataframe     : pd.DataFrame hasil load_and_preprocess_api_data()
         use_llm               : aktifkan Gemini narasi (butuh GEMINI_API_KEY)
 
     Return:
@@ -661,7 +699,7 @@ def jalankan_ai_rekomendasi(
     pantangan   = re.sub(r'[^\w\s\,-]', '', pantangan_raw)[:100].strip()
 
     # --- Layer 1: Asesmen Gizi ---
-    riwayat  = assess_nutritional_status(umur, jk, bb, tb)
+    riwayat  = assess_nutritional_status(umur, jk, bb, tb, kategori)
 
     # --- Layer 2: Kalori + Makro ---
     kalori   = calculate_daily_calories(umur, jk, bb, tb, kategori, riwayat['statusNutrisi'], usia_hamil, anjuran_dr)

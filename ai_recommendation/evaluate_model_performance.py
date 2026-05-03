@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 import numpy as np
 import time
-from model import load_and_preprocess_kaggle_data, jalankan_ai_rekomendasi
+from model import load_and_preprocess_api_data, jalankan_ai_rekomendasi
 
 # ==========================================================================
 # NUTRISCALE AI — MODEL EVALUATION RUNNER
@@ -17,13 +17,10 @@ def evaluate_model():
     print("="*80)
 
     # 1. Load Dataset
-    csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'nutrition.csv')
-    if not os.path.exists(csv_path):
-        print(f"Error: Missing {csv_path}")
-        return
+    api_url = os.environ.get("NEXT_PUBLIC_APP_URL", "http://localhost:3000") + "/api/products"
 
     start_load = time.time()
-    df_food, scaler_dict = load_and_preprocess_kaggle_data(csv_path)
+    df_food, scaler_dict = load_and_preprocess_api_data(api_url)
     end_load = time.time()
     
     print(f"[1/3] Dataset Loaded: {len(df_food)} samples in {end_load - start_load:.2f}s")
