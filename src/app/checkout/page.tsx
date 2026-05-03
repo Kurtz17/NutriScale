@@ -41,11 +41,45 @@ export default function CheckoutPage() {
     address: '',
   });
 
-  const defaultUserAddress = {
-    name: 'John Doe',
-    phone: '081234567890',
-    address: 'Asrama Unpad Jatinangor, Gedung 4 No. 12, Sumedang, Jawa Barat.',
-  };
+  const [defaultUserAddress, setDefaultUserAddress] = useState({
+    name: '',
+    phone: '',
+    address: '',
+  });
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/user/me');
+        if (res.ok) {
+          const user = await res.json();
+          let fullAddress = '';
+          if (user.address) {
+            const addr = user.address;
+            const parts = [];
+            if (addr.detailAlamat) parts.push(addr.detailAlamat);
+            if (addr.jalan) parts.push(addr.jalan);
+            if (addr.rt || addr.rw)
+              parts.push(`RT ${addr.rt || '-'} / RW ${addr.rw || '-'}`);
+            if (addr.kelurahan) parts.push(addr.kelurahan);
+            if (addr.kecamatan) parts.push(addr.kecamatan);
+            if (addr.kabupaten) parts.push(addr.kabupaten);
+            if (addr.provinsi) parts.push(addr.provinsi);
+            if (addr.kodePos) parts.push(addr.kodePos);
+            fullAddress = parts.join(', ');
+          }
+          setDefaultUserAddress({
+            name: user.name || '',
+            phone: user.phone || '',
+            address: fullAddress,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch user', error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleToggleDefault = () => {
     setUseDefaultAddress(!useDefaultAddress);
