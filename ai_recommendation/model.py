@@ -177,7 +177,14 @@ def load_and_preprocess_api_data(api_url: str) -> tuple[pd.DataFrame, dict]:
     try:
         response = requests.get(api_url)
         response.raise_for_status()
-        data = response.json()
+        res_json = response.json()
+        
+        # Next.js API returns { products: [...] } but we might also get a raw list
+        if isinstance(res_json, dict) and 'products' in res_json:
+            data = res_json['products']
+        else:
+            data = res_json
+            
     except Exception as e:
         print(f"[Pipeline Error] Gagal fetch API: {e}")
         # Kembalikan dataframe kosong jika gagal
