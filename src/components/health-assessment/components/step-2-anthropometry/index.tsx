@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 import { HealthFormData } from '../../types/health';
 
@@ -20,7 +21,7 @@ export default function Step2({
 }: Props) {
   const handleNext = () => {
     if (formData.weight === '' || formData.height === '') {
-      alert('Semua field wajib diisi!');
+      toast.error('Semua field wajib diisi!');
       return;
     }
 
@@ -29,12 +30,12 @@ export default function Step2({
 
     // 🔥 VALIDASI MASUK AKAL
     if (weight <= 0 || weight > 300) {
-      alert('Berat badan harus antara 1 - 300 kg');
+      toast.error('Berat badan harus antara 1 - 300 kg');
       return;
     }
 
     if (height <= 0 || height > 250) {
-      alert('Tinggi badan harus antara 1 - 250 cm');
+      toast.error('Tinggi badan harus antara 1 - 250 cm');
       return;
     }
 

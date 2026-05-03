@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 import { HealthFormData } from '../../types/health';
 
@@ -16,7 +17,7 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
 
   const handleNext = () => {
     if (!formData.gender || !formData.category || formData.age === '') {
-      alert('Semua field wajib diisi!');
+      toast.error('Semua field wajib diisi!');
       return;
     }
 
@@ -25,12 +26,12 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
     // 🔥 VALIDASI UMUR DINAMIS
     if (isBalita) {
       if (age < 0 || age > 60) {
-        alert('Umur balita harus 0 - 60 bulan');
+        toast.error('Umur balita harus 0 - 60 bulan');
         return;
       }
     } else {
-      if (age < 5 || age > 200) {
-        alert('Umur harus 5 - 200 tahun');
+      if (age < 5 || age > 110) {
+        toast.error('Umur harus 5 - 110 tahun');
         return;
       }
     }
@@ -79,7 +80,9 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
             <option value="">Select category</option>
             <option value="umum">Umum</option>
             <option value="balita">Anak Balita (Under 5)</option>
-            <option value="ibu_hamil">Ibu Hamil</option>
+            {formData.gender !== 'male' && (
+              <option value="ibu_hamil">Ibu Hamil</option>
+            )}
             <option value="pasca_operasi">Pasien Pasca Operasi</option>
           </select>
         </div>
@@ -93,7 +96,7 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
           <Input
             type="number"
             min={isBalita ? 0 : 5}
-            max={isBalita ? 60 : 200}
+            max={isBalita ? 60 : 110}
             value={formData.age}
             onChange={(e) =>
               setFormData({
@@ -104,7 +107,7 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
           />
 
           <p className="text-sm text-gray-500 mt-1">
-            {isBalita ? 'Range: 0 - 60 bulan' : 'Range: 5 - 200 tahun'}
+            {isBalita ? 'Range: 0 - 60 bulan' : 'Range: 5 - 110 tahun'}
           </p>
         </div>
       </div>

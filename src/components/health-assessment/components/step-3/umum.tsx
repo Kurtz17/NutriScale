@@ -1,11 +1,15 @@
 'use client';
 
 import { saveHealthAssessment } from '@/app/health-assessment/actions';
-import { StepProps } from '@/components/health-assessment/types/health';
+import {
+  HealthFormData,
+  StepProps,
+} from '@/components/health-assessment/types/health';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function Umum({
   formData,
@@ -15,29 +19,36 @@ export default function Umum({
 }: StepProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [tidakTahu, setTidakTahu] = useState(false);
 
   const handleSubmit = async () => {
-    if (!formData.kalori) {
-      alert('Target kalori wajib diisi!');
-      return;
-    }
+    if (!tidakTahu) {
+      if (!formData.kalori) {
+        toast.error('Target kalori wajib diisi!');
+        return;
+      }
 
-    const kalori = Number(formData.kalori);
+      const kalori = Number(formData.kalori);
 
-    if (kalori < 500 || kalori > 10000) {
-      alert('Kalori harus antara 500 - 10000 kkal');
-      return;
+      if (kalori < 500 || kalori > 10000) {
+        toast.error('Kalori harus antara 500 - 10000 kkal');
+        return;
+      }
     }
 
     setLoading(true);
-    const res = await saveHealthAssessment(formData, userId || '');
+    const dataToSave: HealthFormData = {
+      ...formData,
+      kalori: tidakTahu ? '' : formData.kalori,
+    };
+    const res = await saveHealthAssessment(dataToSave, userId || '');
     setLoading(false);
 
     if (res.success) {
-      alert('Data berhasil disimpan!');
+      toast.success('Data berhasil disimpan!');
       router.push('/health-dashboard');
     } else {
-      alert(res.error || 'Terjadi kesalahan sistem.');
+      toast.error(res.error || 'Terjadi kesalahan sistem.');
     }
   };
 
@@ -51,6 +62,7 @@ export default function Umum({
 
           <Input
             type="number"
+            disabled={tidakTahu}
             value={formData.kalori || ''}
             onChange={(e) =>
               setFormData({
@@ -59,6 +71,21 @@ export default function Umum({
               })
             }
           />
+
+          <label className="flex items-center gap-2 mt-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              className="w-4 h-4 rounded border-gray-300"
+              checked={tidakTahu}
+              onChange={(e) => {
+                setTidakTahu(e.target.checked);
+                if (e.target.checked) {
+                  setFormData({ ...formData, kalori: '' });
+                }
+              }}
+            />
+            dikosongkan bila tidak tahu
+          </label>
         </div>
       </div>
 
