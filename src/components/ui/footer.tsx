@@ -16,13 +16,13 @@ export default function Footer() {
             className="flex items-center space-x-3 cursor-pointer"
             onClick={() => router.push('/')}
           >
-            <div className="w-12 h-12 flex items-center justify-center">
+            <div className="w-12 h-12 flex items-center justify-center rounded-full overflow-hidden bg-transparent mix-blend-darken">
               <Image
                 src="/logo.png"
                 alt="NutriScale Logo"
                 width={48}
                 height={48}
-                className="object-contain mix-blend-multiply"
+                className="object-cover"
               />
             </div>
             <span className="text-2xl font-black tracking-tighter text-[#1A1A1B]">
