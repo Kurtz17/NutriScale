@@ -1,5 +1,6 @@
 'use client';
 import { Apple } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FaGithub, FaInstagram, FaXTwitter } from 'react-icons/fa6';
@@ -15,8 +16,14 @@ export default function Footer() {
             className="flex items-center space-x-3 cursor-pointer"
             onClick={() => router.push('/')}
           >
-            <div className="w-10 h-10 bg-[#1A1A1B] rounded-xl flex items-center justify-center">
-              <span className="text-xl">🥗</span>
+            <div className="w-12 h-12 flex items-center justify-center">
+              <Image
+                src="/logo.png"
+                alt="NutriScale Logo"
+                width={48}
+                height={48}
+                className="object-contain mix-blend-multiply"
+              />
             </div>
             <span className="text-2xl font-black tracking-tighter text-[#1A1A1B]">
               NutriScale
