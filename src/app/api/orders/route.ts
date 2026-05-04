@@ -61,9 +61,13 @@ export async function GET() {
           month: 'long',
           year: 'numeric',
         }),
+        rawDate: pesanan.createdAt.toISOString(),
+        alamatKirim: pesanan.alamatKirim
+          ? JSON.parse(pesanan.alamatKirim)
+          : null,
         totalPrice: Number(pesanan.totalHarga),
         totalCalories,
-        status: pesanan.statusPesanan, // TERTUNDA | DIPROSES | DIKIRIM | SELESAI
+        status: pesanan.statusPesanan, // TERTUNDA | DIPROSES | DIKIRIM | SELESAI | DIBATALKAN
         items,
       };
     });

@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { cartItems } = body;
+    const { cartItems, alamatKirim } = body;
 
     if (!cartItems || cartItems.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
@@ -68,6 +68,7 @@ export async function POST(req: Request) {
         userId: session.user.id,
         totalHarga: totalHarga,
         statusPesanan: 'TERTUNDA',
+        alamatKirim: alamatKirim ? JSON.stringify(alamatKirim) : null,
         orderItems: {
           create: orderItems,
         },
