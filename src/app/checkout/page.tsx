@@ -32,6 +32,12 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cart, fetchCart } = useCartStore();
   const [isPending, setIsPending] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    message: string;
+    type: 'error' | 'warning' | 'success';
+  } | null>(null);
 
   // --- TUGAS ARYA: FITUR ALAMAT DEFAULT ---
   const [useDefaultAddress, setUseDefaultAddress] = useState(false);
@@ -90,15 +96,33 @@ export default function CheckoutPage() {
     }
   };
 
-  const handlePayment = async () => {
-    if (cart.length === 0) return alert('Keranjang kosong!');
+  const handlePayment = () => {
+    if (cart.length === 0)
+      return setNotification({
+        isOpen: true,
+        message: 'Keranjang belanja Anda kosong!',
+        type: 'warning',
+      });
+    if (!formData.name || !formData.phone || !formData.address) {
+      return setNotification({
+        isOpen: true,
+        message:
+          'Harap lengkapi nama, nomor telepon, dan alamat pengiriman terlebih dahulu.',
+        type: 'warning',
+      });
+    }
+    setIsConfirmOpen(true);
+  };
+
+  const processPayment = async () => {
+    setIsConfirmOpen(false);
     setIsPending(true);
 
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cartItems: cart }),
+        body: JSON.stringify({ cartItems: cart, alamatKirim: formData }),
       });
 
       const data = await response.json();
@@ -118,7 +142,11 @@ export default function CheckoutPage() {
             router.push('/order-history');
           },
           onError: () => {
-            alert('Pembayaran gagal. Silakan coba lagi.');
+            setNotification({
+              isOpen: true,
+              message: 'Pembayaran gagal. Silakan coba lagi.',
+              type: 'error',
+            });
             setIsPending(false);
           },
           onClose: () => {
@@ -128,11 +156,14 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error('Payment Error:', error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : 'Terjadi kesalahan saat memproses pembayaran',
-      );
+      setNotification({
+        isOpen: true,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Terjadi kesalahan saat memproses pembayaran',
+        type: 'error',
+      });
       setIsPending(false);
     }
   };
@@ -318,6 +349,66 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Pop-up Konfirmasi Pesanan */}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h3 className="text-2xl font-black text-[#1A1A1B] mb-2 text-center">
+              Konfirmasi Pesanan
+            </h3>
+            <p className="text-gray-500 text-center mb-8 font-medium">
+              Apakah Anda yakin ingin memproses pesanan ini? Pastikan keranjang
+              dan alamat pengiriman sudah sesuai.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsConfirmOpen(false)}
+                className="flex-1 py-4 rounded-2xl font-black text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={processPayment}
+                className="flex-1 py-4 rounded-2xl font-black text-white bg-[#1A1A1B] hover:bg-gray-800 transition-colors shadow-lg"
+              >
+                Ya, Proses
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Notification Modal */}
+      {notification?.isOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col items-center text-center">
+            <div
+              className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${notification.type === 'error' ? 'bg-red-100' : notification.type === 'warning' ? 'bg-yellow-100' : 'bg-green-100'}`}
+            >
+              <ShieldCheck
+                className={`w-8 h-8 ${notification.type === 'error' ? 'text-red-600' : notification.type === 'warning' ? 'text-yellow-600' : 'text-green-600'}`}
+              />
+            </div>
+            <h3 className="text-xl font-black text-[#1A1A1B] mb-2">
+              {notification.type === 'error'
+                ? 'Oops! Terjadi Kesalahan'
+                : notification.type === 'warning'
+                  ? 'Perhatian'
+                  : 'Berhasil'}
+            </h3>
+            <p className="text-gray-500 font-medium mb-8">
+              {notification.message}
+            </p>
+            <button
+              onClick={() => setNotification(null)}
+              className="w-full py-4 rounded-2xl font-black text-white bg-[#1A1A1B] hover:bg-gray-800 transition-colors shadow-lg"
+            >
+              Mengerti
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
