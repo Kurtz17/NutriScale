@@ -48,17 +48,12 @@ export default function MarketplacePage() {
       try {
         const res = await fetch('/api/products');
         if (res.ok) {
-          const data = await res.json();
-          // API returns { targetCalories, products }
-          if (data.products && Array.isArray(data.products)) {
-            setProducts(data.products);
-            if (data.targetCalories) {
-              setTargetCalories(data.targetCalories);
-            }
-          } else {
-            // fallback if it's still returning flat array
-            setProducts(data);
+          const targetCaloriesHeader = res.headers.get('X-Target-Calories');
+          if (targetCaloriesHeader) {
+            setTargetCalories(Number(targetCaloriesHeader));
           }
+          const data = await res.json();
+          setProducts(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         console.error('Failed to load products:', error);

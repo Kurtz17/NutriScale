@@ -32,7 +32,7 @@ export async function GET() {
         >;
 
         targetCalories =
-          mealPlanDetail?.target_kalori_harian ||
+          (mealPlanDetail?.target_kalori_harian as number) ||
           profile.anjuranKaloriDokter ||
           2000;
 
@@ -97,9 +97,10 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({
-      targetCalories,
-      products: mappedProducts,
+    return NextResponse.json(mappedProducts, {
+      headers: {
+        'X-Target-Calories': targetCalories.toString(),
+      },
     });
   } catch (error) {
     console.error(error);
