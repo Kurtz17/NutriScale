@@ -75,17 +75,18 @@ export async function POST(req: Request) {
       },
     });
 
-    // Buat transaksi pembayaran dengan status tertunda
+    // Generate transaksi midtrans
+    const midtransRes = await createMidtransTransaction(pesanan.id, totalHarga);
+
+    // Buat transaksi pembayaran dengan status tertunda dan simpan token
     await prisma.transaksiPembayaran.create({
       data: {
         id: crypto.randomUUID(),
         pesananId: pesanan.id,
         statusPembayaran: 'TERTUNDA',
+        metodePembayaran: midtransRes.token,
       },
     });
-
-    // Generate transaksi midtrans
-    const midtransRes = await createMidtransTransaction(pesanan.id, totalHarga);
 
     return NextResponse.json({
       snapToken: midtransRes.token,
