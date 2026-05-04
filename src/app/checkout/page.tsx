@@ -222,7 +222,7 @@ export default function CheckoutPage() {
                           {item.name}
                         </h4>
                         <p className="text-[10px] text-gray-400 font-bold uppercase">
-                          {item.quantity} Unit
+                          {item.quantity} pcs
                         </p>
                       </div>
                     </div>

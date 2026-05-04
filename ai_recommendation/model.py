@@ -556,17 +556,34 @@ def build_meal_plan(kalori_info: dict, df_filtered: pd.DataFrame, kategori: str,
 
     used_foods = set()
 
-    def get_top(ratio: float, meal_type: str, n: int) -> list:
-        return recommend_meal(target * ratio, split_macro(ratio), df_filtered, kategori, scaler_dict, meal_type, used_foods, n)
+    def get_paket(ratio: float, meal_type: str, n: int) -> list:
+        paket = []
+        if n == 1:
+            return recommend_meal(target * ratio, split_macro(ratio), df_filtered, kategori, scaler_dict, meal_type, used_foods, 1)
+            
+        fractions = []
+        if n == 2:
+            fractions = [0.6, 0.4]
+        elif n == 3:
+            fractions = [0.5, 0.25, 0.25]
+        else:
+            fractions = [1.0/n] * n
+            
+        for frac in fractions:
+            item_ratio = ratio * frac
+            item = recommend_meal(target * item_ratio, split_macro(item_ratio), df_filtered, kategori, scaler_dict, meal_type, used_foods, 1)
+            if item:
+                paket.extend(item)
+        return paket
 
     return {
         'target_kalori_harian': target,
         'distribusi':           dist,
-        'rekomendasi_pagi':        get_top(sesi['pagi'],       'pagi',  5),
-        'rekomendasi_snack_pagi':  get_top(sesi['snack_pagi'], 'snack', 3),
-        'rekomendasi_siang':       get_top(sesi['siang'],      'siang', 5),
-        'rekomendasi_snack_sore':  get_top(sesi['snack_sore'], 'snack', 3),
-        'rekomendasi_malam':       get_top(sesi['malam'],      'malam', 5),
+        'rekomendasi_pagi':        get_paket(sesi['pagi'],       'pagi',  3),
+        'rekomendasi_snack_pagi':  get_paket(sesi['snack_pagi'], 'snack', 1),
+        'rekomendasi_siang':       get_paket(sesi['siang'],      'siang', 3),
+        'rekomendasi_snack_sore':  get_paket(sesi['snack_sore'], 'snack', 1),
+        'rekomendasi_malam':       get_paket(sesi['malam'],      'malam', 2),
     }
 
 

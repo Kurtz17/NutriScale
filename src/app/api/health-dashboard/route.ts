@@ -28,22 +28,26 @@ export async function GET() {
     // If we have actual DB data, map it. Otherwise provide safe defaults/empty
     let stats = [
       { title: 'WHO Z-Score (HAZ)', value: '+0.0 SD', status: 'Normal' },
-      { title: 'Daily Calories', value: `0 / 2000`, progress: 0 },
-      { title: 'Protein Intake', value: `0 / 50g`, progress: 0 },
+      { title: 'Daily Calories', value: `0 / 0`, progress: 0 },
+      { title: 'Protein Intake', value: `0 / 0g`, progress: 0 },
       { title: 'Health Status', value: 'No Data Yet' },
     ];
 
     type MealEntry = {
-      productId?: string;
-      image?: string;
-      price?: number;
-      recommended_quantity?: number;
-      title: string;
       time: string;
-      calories: number;
-      protein: number;
-      tags: string[];
       type: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack';
+      totalCalories: number;
+      totalProtein: number;
+      items: {
+        productId?: string;
+        image?: string;
+        price?: number;
+        recommended_quantity?: number;
+        title: string;
+        calories: number;
+        protein: number;
+        tags: string[];
+      }[];
     };
     let meals: MealEntry[] = [];
 
@@ -79,8 +83,8 @@ export async function GET() {
       const targetCalories =
         mealPlanDetail?.target_kalori_harian ||
         profile.anjuranKaloriDokter ||
-        2000;
-      const targetProtein = mealPlanDetail?.distribusi?.protein_g || 60;
+        0;
+      const targetProtein = mealPlanDetail?.distribusi?.protein_g || 0;
       const narasiAI = mealPlanDetail?.narasiAI || '';
 
       // Map sessions to meals
@@ -92,31 +96,6 @@ export async function GET() {
         { key: 'rekomendasi_malam', label: 'Dinner', time: '07:00 PM' },
       ];
 
-      meals = [];
-      let currentCalorieIntake = 0;
-      let currentProteinIntake = 0;
-
-      sessions.forEach((s) => {
-        const foodItems = (mealPlanDetail?.[s.key] as FoodItem[]) || [];
-        if (foodItems.length > 0) {
-          const topFood = foodItems[0];
-          const qty = topFood.recommended_quantity || 1;
-
-          meals.push({
-            productId: topFood.produk_id,
-            image: topFood.gambar,
-            price: topFood.harga,
-            recommended_quantity: qty,
-            title: topFood.nama_makanan,
-            time: s.time,
-            calories: topFood.calories,
-            protein: topFood.protein,
-            tags: [s.label, `Match: ${topFood.match_score}%`],
-            type: s.label as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack',
-          });
-        }
-      });
-
       // Calculate actual intake from today's orders
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
@@ -125,7 +104,7 @@ export async function GET() {
         where: {
           userId: session.user.id,
           createdAt: { gte: startOfDay },
-          statusPesanan: { in: ['TERTUNDA', 'DIPROSES', 'DIKIRIM', 'SELESAI'] },
+          statusPesanan: { in: ['DIPROSES', 'DIKIRIM', 'SELESAI'] },
         },
         include: {
           orderItems: {
@@ -136,14 +115,61 @@ export async function GET() {
         },
       });
 
+      let currentCalorieIntake = 0;
+      let currentProteinIntake = 0;
+      const purchasedProductIds = new Set<string>();
+
       pesananHariIni.forEach((pesanan) => {
         pesanan.orderItems.forEach((item) => {
+          purchasedProductIds.add(item.produk.id);
           const gizi = (item.produk.nilaiGizi as Record<string, unknown>) || {};
           const cals = Number(gizi.calories) || 0;
           const prot = Number(gizi.protein) || 0;
           currentCalorieIntake += cals * item.kuantitas;
           currentProteinIntake += prot * item.kuantitas;
         });
+      });
+
+      meals = [];
+
+      sessions.forEach((s) => {
+        const foodItems = (mealPlanDetail?.[s.key] as FoodItem[]) || [];
+        if (foodItems.length > 0) {
+          // Check if all items in this session have been purchased today
+          const allPurchased = foodItems.every(
+            (food) => food.produk_id && purchasedProductIds.has(food.produk_id),
+          );
+
+          if (!allPurchased) {
+            let totalCalories = 0;
+            let totalProtein = 0;
+
+            const items = foodItems.map((food) => {
+              const qty = food.recommended_quantity || 1;
+              totalCalories += food.calories * qty;
+              totalProtein += food.protein * qty;
+
+              return {
+                productId: food.produk_id,
+                image: food.gambar,
+                price: food.harga,
+                recommended_quantity: qty,
+                title: food.nama_makanan,
+                calories: food.calories,
+                protein: food.protein,
+                tags: [s.label, `Match: ${food.match_score}%`],
+              };
+            });
+
+            meals.push({
+              time: s.time,
+              type: s.label as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack',
+              totalCalories: Math.round(totalCalories),
+              totalProtein: Math.round(totalProtein),
+              items,
+            });
+          }
+        }
       });
 
       stats = [
@@ -183,8 +209,8 @@ export async function GET() {
     return NextResponse.json({
       stats,
       meals,
-      targetCalories: 2000,
-      targetProtein: 50,
+      targetCalories: 0,
+      targetProtein: 0,
     });
   } catch (error) {
     console.error(error);

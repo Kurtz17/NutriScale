@@ -23,6 +23,7 @@ export async function GET() {
             produk: true,
           },
         },
+        transaksiPembayaran: true,
       },
     });
 
@@ -68,6 +69,7 @@ export async function GET() {
         totalPrice: Number(pesanan.totalHarga),
         totalCalories,
         status: pesanan.statusPesanan, // TERTUNDA | DIPROSES | DIKIRIM | SELESAI | DIBATALKAN
+        snapToken: pesanan.transaksiPembayaran?.metodePembayaran || null,
         items,
       };
     });
