@@ -93,11 +93,16 @@ export default function ProfileForm({ initialData }: Props) {
 
     const address: AddressData = {
       provinsi: (formData.get('provinsi') as string) || undefined,
+      provinsiId: (formData.get('provinsiId') as string) || undefined,
       kabupaten: (formData.get('kabupaten') as string) || undefined,
+      kabupatenId: (formData.get('kabupatenId') as string) || undefined,
+      kecamatan: (formData.get('kecamatan') as string) || undefined,
+      kecamatanId: (formData.get('kecamatanId') as string) || undefined,
       kelurahan: (formData.get('kelurahan') as string) || undefined,
-      jalan: (formData.get('jalan') as string) || undefined,
+      kelurahanId: (formData.get('kelurahanId') as string) || undefined,
       rt: (formData.get('rt') as string) || undefined,
       rw: (formData.get('rw') as string) || undefined,
+      detailAlamat: (formData.get('detailAlamat') as string) || undefined,
       kodePos: (formData.get('kodePos') as string) || undefined,
     };
 
@@ -248,8 +253,10 @@ export default function ProfileForm({ initialData }: Props) {
               />
             </div>
 
-            <div className="md:col-span-2 space-y-2">
-              <Label>Alamat</Label>
+            <div className="md:col-span-2 mt-4 pt-6 border-t border-slate-200">
+              <h3 className="text-lg font-bold text-slate-800 mb-4">
+                Alamat Lengkap
+              </h3>
               <AddressFields
                 initialData={initialData.address}
                 disabled={!isEditing}

@@ -37,5 +37,6 @@ export const config = {
     '/profile/:path*',
     '/smart-counter/:path*',
     '/checkout/:path*',
+    '/order-history/:path*',
   ],
 };

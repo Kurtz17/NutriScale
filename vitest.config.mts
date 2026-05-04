@@ -7,7 +7,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     clearMocks: true,
-    // setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['./tests/setup.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/e2e/**',
+    ],
     coverage: {
       provider: 'v8',
     },

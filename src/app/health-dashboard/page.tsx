@@ -2,8 +2,6 @@
 
 import ActionButtons from '@/components/health-dashboard/components/action-buttons';
 import AIInsightCard from '@/components/health-dashboard/components/ai-insight-card';
-import CalorieChart from '@/components/health-dashboard/components/charts/calorie-chart';
-import ProteinChart from '@/components/health-dashboard/components/charts/protein-chart';
 import HealthStatus from '@/components/health-dashboard/components/health-status';
 import HealthTip from '@/components/health-dashboard/components/health-tip';
 import MealSection from '@/components/health-dashboard/components/meal-section';
@@ -74,12 +72,6 @@ export default function HealthDashboardPage() {
         {/* ACTION BUTTONS */}
         <div className="mb-8">
           <ActionButtons />
-        </div>
-
-        {/* CHARTS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <CalorieChart />
-          <ProteinChart />
         </div>
 
         {/* MEALS */}

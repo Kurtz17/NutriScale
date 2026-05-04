@@ -1,7 +1,7 @@
 'use client';
 import { authClient } from '@/lib/auth-client';
 import { useCartStore } from '@/lib/store/useCartStore';
-import { LogOut, ShoppingCart, User } from 'lucide-react';
+import { LogOut, Package, ShoppingCart, User } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -63,8 +63,14 @@ export default function Navbar() {
             className="flex items-center space-x-3 cursor-pointer"
             onClick={() => router.push('/')}
           >
-            <div className="w-10 h-10 bg-[#1A1A1B] rounded-xl flex items-center justify-center">
-              <span className="text-xl">🥗</span>
+            <div className="w-12 h-12 flex items-center justify-center rounded-full overflow-hidden bg-transparent mix-blend-darken">
+              <Image
+                src="/logo.png"
+                alt="NutriScale Logo"
+                width={48}
+                height={48}
+                className="object-cover"
+              />
             </div>
             <span className="text-2xl font-black tracking-tighter text-[#1A1A1B]">
               NutriScale
@@ -165,6 +171,16 @@ export default function Navbar() {
                       >
                         <User className="w-4 h-4 text-slate-500" /> Profile
                         Settings
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          router.push('/order-history');
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 font-medium hover:bg-slate-50 rounded-xl"
+                      >
+                        <Package className="w-4 h-4 text-slate-500" /> Order
+                        History
                       </button>
                       <button
                         onClick={handleLogout}

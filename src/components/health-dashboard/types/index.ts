@@ -6,11 +6,21 @@ export interface Stat {
   status?: string;
 }
 
-export interface Meal {
+export interface MealItem {
+  productId?: string;
+  image?: string;
+  price?: number;
+  recommended_quantity?: number;
   title: string;
-  time: string;
   calories: number;
   protein: number;
   tags: string[];
+}
+
+export interface Meal {
+  time: string;
   type: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack';
+  totalCalories: number;
+  totalProtein: number;
+  items: MealItem[];
 }

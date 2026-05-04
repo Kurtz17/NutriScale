@@ -27,7 +27,7 @@ export default function AIInsightCard({ narrative }: AIInsightCardProps) {
             <div className="flex items-center gap-2">
               <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
               <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                Gemini Precision Model v2.1
+                Personalized for you
               </p>
             </div>
           </div>

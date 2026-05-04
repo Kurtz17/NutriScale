@@ -40,14 +40,20 @@ export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  const [targetCalories, setTargetCalories] = useState(2000);
+
   // Load products and cart
   useEffect(() => {
     const loadData = async () => {
       try {
         const res = await fetch('/api/products');
         if (res.ok) {
+          const targetCaloriesHeader = res.headers.get('X-Target-Calories');
+          if (targetCaloriesHeader) {
+            setTargetCalories(Number(targetCaloriesHeader));
+          }
           const data = await res.json();
-          setProducts(data);
+          setProducts(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         console.error('Failed to load products:', error);
@@ -196,9 +202,24 @@ export default function MarketplacePage() {
                 <p className="font-bold text-2xl text-black">
                   {totalCalories} kcal
                 </p>
-                <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                  <span className="text-green-500">✓</span> Balanced selection
-                </p>
+
+                {cart.length === 0 ? (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Add items to check balance
+                  </p>
+                ) : totalCalories > targetCalories ? (
+                  <p className="text-xs text-red-500 font-semibold flex items-center gap-1 mt-1 animate-pulse">
+                    ⚠️ Exceeds daily needs
+                  </p>
+                ) : totalCalories < targetCalories * 0.5 ? (
+                  <p className="text-xs text-yellow-500 font-medium flex items-center gap-1 mt-1">
+                    <span>⚠️</span> Below daily target
+                  </p>
+                ) : (
+                  <p className="text-xs text-green-500 font-medium flex items-center gap-1 mt-1">
+                    <span>✓</span> Balanced selection
+                  </p>
+                )}
               </div>
 
               <ScrollArea className="h-[380px] pr-4 -mr-4">
@@ -237,10 +258,9 @@ export default function MarketplacePage() {
                           <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg p-1 border border-gray-100">
                             <button
                               onClick={() =>
-                                updateQuantity(
-                                  item.id,
-                                  Math.max(1, item.quantity - 1),
-                                )
+                                item.quantity === 1
+                                  ? removeFromCart(item.id)
+                                  : updateQuantity(item.id, item.quantity - 1)
                               }
                               className="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-md text-lg leading-none"
                             >
@@ -253,7 +273,17 @@ export default function MarketplacePage() {
                               onClick={() =>
                                 updateQuantity(item.id, item.quantity + 1)
                               }
-                              className="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-md text-lg leading-none"
+                              disabled={
+                                item.stok !== null &&
+                                item.quantity >= (item.stok ?? Infinity)
+                              }
+                              title={
+                                item.stok !== null &&
+                                item.quantity >= (item.stok ?? Infinity)
+                                  ? `Stok tersedia hanya ${item.stok}`
+                                  : undefined
+                              }
+                              className="w-6 h-6 flex items-center justify-center rounded-md text-lg leading-none disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 hover:bg-gray-200 disabled:hover:bg-transparent"
                             >
                               +
                             </button>

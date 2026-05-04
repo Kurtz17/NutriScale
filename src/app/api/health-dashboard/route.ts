@@ -28,28 +28,40 @@ export async function GET() {
     // If we have actual DB data, map it. Otherwise provide safe defaults/empty
     let stats = [
       { title: 'WHO Z-Score (HAZ)', value: '+0.0 SD', status: 'Normal' },
-      { title: 'Daily Calories', value: '0 / 2000', progress: 0 },
-      { title: 'Protein Intake', value: '0 / 50g', progress: 0 },
+      { title: 'Daily Calories', value: `0 / 0`, progress: 0 },
+      { title: 'Protein Intake', value: `0 / 0g`, progress: 0 },
       { title: 'Health Status', value: 'No Data Yet' },
     ];
 
     type MealEntry = {
-      title: string;
       time: string;
-      calories: number;
-      protein: number;
-      tags: string[];
       type: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack';
+      totalCalories: number;
+      totalProtein: number;
+      items: {
+        productId?: string;
+        image?: string;
+        price?: number;
+        recommended_quantity?: number;
+        title: string;
+        calories: number;
+        protein: number;
+        tags: string[];
+      }[];
     };
     let meals: MealEntry[] = [];
 
     interface FoodItem {
+      produk_id?: string;
+      gambar?: string;
+      harga?: number;
       nama_makanan: string;
       calories: number;
       protein: number;
       fat: number;
       carbs: number;
       match_score: number;
+      recommended_quantity?: number;
     }
 
     interface MealPlanDetail {
@@ -71,28 +83,9 @@ export async function GET() {
       const targetCalories =
         mealPlanDetail?.target_kalori_harian ||
         profile.anjuranKaloriDokter ||
-        2000;
-      const targetProtein = mealPlanDetail?.distribusi?.protein_g || 60;
+        0;
+      const targetProtein = mealPlanDetail?.distribusi?.protein_g || 0;
       const narasiAI = mealPlanDetail?.narasiAI || '';
-
-      stats = [
-        {
-          title: 'WHO Z-Score (HAZ)',
-          value: `${Number(latest.haz) > 0 ? '+' : ''}${latest.haz} SD`,
-          status: latest.statusNutrisi,
-        },
-        {
-          title: 'Daily Calories',
-          value: `0 / ${Math.round(targetCalories)}`,
-          progress: 0, // In production, this would be computed from daily logs
-        },
-        {
-          title: 'Protein Intake',
-          value: `0 / ${Math.round(targetProtein)}g`,
-          progress: 0,
-        },
-        { title: 'Health Status', value: latest.statusNutrisi },
-      ];
 
       // Map sessions to meals
       const sessions = [
@@ -103,26 +96,122 @@ export async function GET() {
         { key: 'rekomendasi_malam', label: 'Dinner', time: '07:00 PM' },
       ];
 
+      // Calculate actual intake from today's orders
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const pesananHariIni = await prisma.pesanan.findMany({
+        where: {
+          userId: session.user.id,
+          createdAt: { gte: startOfDay },
+          statusPesanan: { in: ['DIPROSES', 'DIKIRIM', 'SELESAI'] },
+        },
+        include: {
+          orderItems: {
+            include: {
+              produk: true,
+            },
+          },
+        },
+      });
+
+      let currentCalorieIntake = 0;
+      let currentProteinIntake = 0;
+      const purchasedProductIds = new Set<string>();
+
+      pesananHariIni.forEach((pesanan) => {
+        pesanan.orderItems.forEach((item) => {
+          purchasedProductIds.add(item.produk.id);
+          const gizi = (item.produk.nilaiGizi as Record<string, unknown>) || {};
+          const cals = Number(gizi.calories) || 0;
+          const prot = Number(gizi.protein) || 0;
+          currentCalorieIntake += cals * item.kuantitas;
+          currentProteinIntake += prot * item.kuantitas;
+        });
+      });
+
       meals = [];
+
       sessions.forEach((s) => {
         const foodItems = (mealPlanDetail?.[s.key] as FoodItem[]) || [];
         if (foodItems.length > 0) {
-          const topFood = foodItems[0];
-          meals.push({
-            title: topFood.nama_makanan,
-            time: s.time,
-            calories: topFood.calories,
-            protein: topFood.protein,
-            tags: [s.label, `Match: ${topFood.match_score}%`],
-            type: s.label as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack',
-          });
+          // Check if all items in this session have been purchased today
+          const allPurchased = foodItems.every(
+            (food) => food.produk_id && purchasedProductIds.has(food.produk_id),
+          );
+
+          if (!allPurchased) {
+            let totalCalories = 0;
+            let totalProtein = 0;
+
+            const items = foodItems.map((food) => {
+              const qty = food.recommended_quantity || 1;
+              totalCalories += food.calories * qty;
+              totalProtein += food.protein * qty;
+
+              return {
+                productId: food.produk_id,
+                image: food.gambar,
+                price: food.harga,
+                recommended_quantity: qty,
+                title: food.nama_makanan,
+                calories: food.calories,
+                protein: food.protein,
+                tags: [s.label, `Match: ${food.match_score}%`],
+              };
+            });
+
+            meals.push({
+              time: s.time,
+              type: s.label as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack',
+              totalCalories: Math.round(totalCalories),
+              totalProtein: Math.round(totalProtein),
+              items,
+            });
+          }
         }
       });
 
-      return NextResponse.json({ stats, meals, narasiAI });
+      stats = [
+        {
+          title: 'WHO Z-Score (HAZ)',
+          value: `${Number(latest.haz) > 0 ? '+' : ''}${latest.haz} SD`,
+          status: latest.statusNutrisi,
+        },
+        {
+          title: 'Daily Calories',
+          value: `${Math.round(currentCalorieIntake)} / ${Math.round(targetCalories)}`,
+          progress:
+            targetCalories > 0
+              ? (currentCalorieIntake / targetCalories) * 100
+              : 0,
+        },
+        {
+          title: 'Protein Intake',
+          value: `${Math.round(currentProteinIntake)}g / ${Math.round(targetProtein)}g`,
+          progress:
+            targetProtein > 0
+              ? (currentProteinIntake / targetProtein) * 100
+              : 0,
+        },
+        { title: 'Health Status', value: latest.statusNutrisi },
+      ];
+
+      return NextResponse.json({
+        stats,
+        meals,
+        narasiAI,
+        targetCalories: Math.round(targetCalories),
+        targetProtein: Math.round(targetProtein),
+      });
     }
 
-    return NextResponse.json({ stats, meals });
+    return NextResponse.json({
+      stats,
+      meals,
+      targetCalories: 0,
+      targetProtein: 0,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

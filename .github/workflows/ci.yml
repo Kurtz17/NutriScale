@@ -8,7 +8,15 @@ on:
     branches: [main, dev]
 
 env:
+  # App Secret & Auth
   BETTER_AUTH_SECRET: my-betterauth-secret
+  GOOGLE_CLIENT_ID: dummy-id
+  GOOGLE_CLIENT_SECRET: dummy-secret
+  # Payment & AI
+  MIDTRANS_SERVER_KEY: dummy-key
+  MIDTRANS_CLIENT_KEY: dummy-key
+  AI_ENGINE_URL: http://localhost:8000
+  # Database
   POSTGRES_USER: testuser
   POSTGRES_PASSWORD: testpassword
   POSTGRES_DB: testdb

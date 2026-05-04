@@ -8,7 +8,7 @@ export type CartItem = Product & {
 interface CartState {
   cart: CartItem[];
   isLoading: boolean;
-  addToCart: (product: Product) => Promise<void>;
+  addToCart: (product: Product, quantityToAdd?: number) => Promise<void>;
   updateQuantity: (
     productId: string | number,
     quantity: number,
@@ -37,28 +37,37 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  addToCart: async (product) => {
+  addToCart: async (product, quantityToAdd = 1) => {
     const { cart } = get();
     const existing = cart.find((item) => item.id === product.id);
+    const stok = product.stok;
+
+    // Jangan tambah jika sudah mencapai batas stok
+    if (existing && stok !== null && existing.quantity + quantityToAdd > stok) {
+      return;
+    }
 
     // Optimistic update
     if (existing) {
       set({
         cart: cart.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantityToAdd }
             : item,
         ),
       });
     } else {
-      set({ cart: [...cart, { ...product, quantity: 1 }] });
+      set({ cart: [...cart, { ...product, quantity: quantityToAdd }] });
     }
 
     try {
       await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: String(product.id), quantity: 1 }),
+        body: JSON.stringify({
+          productId: String(product.id),
+          quantity: quantityToAdd,
+        }),
       });
     } catch (error) {
       console.error('Failed to add to cart on server', error);
@@ -67,11 +76,19 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   updateQuantity: async (productId, quantity) => {
+    const { cart } = get();
+    const item = cart.find((i) => i.id === productId);
+    const stok = item?.stok;
+
+    // Batasi quantity sesuai stok yang tersedia
+    const clampedQty =
+      stok !== null && stok !== undefined
+        ? Math.min(Math.max(1, quantity), stok)
+        : Math.max(1, quantity);
+
     set({
-      cart: get().cart.map((item) =>
-        item.id === productId
-          ? { ...item, quantity: Math.max(1, quantity) }
-          : item,
+      cart: cart.map((i) =>
+        i.id === productId ? { ...i, quantity: clampedQty } : i,
       ),
     });
 
@@ -81,7 +98,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: String(productId),
-          quantity: quantity,
+          quantity: clampedQty,
           setExact: true,
         }),
       });
