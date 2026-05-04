@@ -20,6 +20,7 @@ import {
   MapPin,
   MessageCircle,
   Package,
+  ShieldCheck,
   ShoppingBag,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -34,30 +35,199 @@ type OrderItem = {
 type OrderHistory = {
   id: string;
   date: string;
+  rawDate: string;
   totalPrice: number;
   totalCalories: number;
   status: string;
+  alamatKirim?: { name: string; phone: string; address: string } | null;
   items: OrderItem[];
 };
+
+function OrderCancelButton({
+  rawDate,
+  orderId,
+  onCancel,
+}: {
+  rawDate: string;
+  orderId: string;
+  onCancel: () => void;
+}) {
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [canCancel, setCanCancel] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    message: string;
+    type: 'error' | 'warning' | 'success';
+  } | null>(null);
+
+  useEffect(() => {
+    const targetTime = new Date(rawDate).getTime() + 60 * 60 * 1000;
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const diff = targetTime - now;
+
+      if (diff <= 0) {
+        setCanCancel(false);
+        setTimeLeft('');
+        return;
+      }
+
+      setCanCancel(true);
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft(
+        `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`,
+      );
+    };
+
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, [rawDate]);
+
+  if (!canCancel) return null;
+
+  const handleCancelClick = () => {
+    setIsConfirmOpen(true);
+  };
+
+  const proceedCancel = async () => {
+    setIsConfirmOpen(false);
+    setIsCanceling(true);
+    try {
+      const res = await fetch('/api/orders/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      if (res.ok) {
+        onCancel();
+      } else {
+        const data = await res.json();
+        setNotification({
+          isOpen: true,
+          message: data.error || 'Gagal membatalkan pesanan',
+          type: 'error',
+        });
+      }
+    } catch (err) {
+      setNotification({
+        isOpen: true,
+        message: 'Terjadi kesalahan sistem',
+        type: 'error',
+      });
+    } finally {
+      setIsCanceling(false);
+    }
+  };
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        disabled={isCanceling}
+        onClick={handleCancelClick}
+        className="w-full mt-3 bg-red-600 text-white rounded-2xl border-none py-7 text-sm font-black hover:bg-red-700 transition-all shadow-sm flex items-center justify-between px-6 group"
+      >
+        <span>Batalkan Pesanan</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-red-200 group-hover:text-red-100">
+            Sisa Waktu:
+          </span>
+          <span className="text-white bg-red-800/40 px-3 py-1 rounded-lg tabular-nums border border-red-700/50">
+            {timeLeft}
+          </span>
+        </div>
+      </Button>
+
+      {/* Pop-up Konfirmasi Pembatalan */}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col text-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 mx-auto">
+              <Activity className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-black text-[#1A1A1B] mb-2">
+              Batalkan Pesanan?
+            </h3>
+            <p className="text-gray-500 font-medium mb-8 text-sm">
+              Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini
+              tidak dapat diurungkan.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsConfirmOpen(false)}
+                className="flex-1 py-4 rounded-2xl font-black text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors"
+              >
+                Kembali
+              </button>
+              <button
+                onClick={proceedCancel}
+                className="flex-1 py-4 rounded-2xl font-black text-white bg-red-600 hover:bg-red-700 transition-colors shadow-lg"
+              >
+                Ya, Batalkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Notification Modal */}
+      {notification?.isOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col items-center text-center">
+            <div
+              className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${notification.type === 'error' ? 'bg-red-100' : notification.type === 'warning' ? 'bg-yellow-100' : 'bg-green-100'}`}
+            >
+              <ShieldCheck
+                className={`w-8 h-8 ${notification.type === 'error' ? 'text-red-600' : notification.type === 'warning' ? 'text-yellow-600' : 'text-green-600'}`}
+              />
+            </div>
+            <h3 className="text-xl font-black text-[#1A1A1B] mb-2">
+              {notification.type === 'error'
+                ? 'Oops! Terjadi Kesalahan'
+                : notification.type === 'warning'
+                  ? 'Perhatian'
+                  : 'Berhasil'}
+            </h3>
+            <p className="text-gray-500 font-medium mb-8">
+              {notification.message}
+            </p>
+            <button
+              onClick={() => setNotification(null)}
+              className="w-full py-4 rounded-2xl font-black text-white bg-[#1A1A1B] hover:bg-gray-800 transition-colors shadow-lg"
+            >
+              Mengerti
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function OrderHistoryPage() {
   const [orderHistory, setOrderHistory] = useState<OrderHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchOrders() {
-      try {
-        const res = await fetch('/api/orders');
-        const data = await res.json();
-        if (res.ok) {
-          setOrderHistory(data.orders || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch orders:', error);
-      } finally {
-        setIsLoading(false);
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('/api/orders');
+      const data = await res.json();
+      if (res.ok) {
+        setOrderHistory(data.orders || []);
       }
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, []);
 
@@ -120,8 +290,12 @@ export default function OrderHistoryPage() {
                   {/* Info ID & Tanggal */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-[#E1EEDD] rounded-2xl">
-                        <Package className="w-6 h-6 text-[#7CB342]" />
+                      <div
+                        className={`p-3 rounded-2xl ${order.status === 'SELESAI' ? 'bg-green-100' : order.status === 'DIBATALKAN' ? 'bg-red-100' : order.status === 'TERTUNDA' ? 'bg-yellow-100' : 'bg-blue-100'}`}
+                      >
+                        <Package
+                          className={`w-6 h-6 ${order.status === 'SELESAI' ? 'text-green-600' : order.status === 'DIBATALKAN' ? 'text-red-600' : order.status === 'TERTUNDA' ? 'text-yellow-600' : 'text-blue-600'}`}
+                        />
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
@@ -143,19 +317,22 @@ export default function OrderHistoryPage() {
                         className={`px-4 py-1.5 rounded-full font-bold border-none text-xs ${
                           order.status === 'SELESAI'
                             ? 'bg-green-100 text-green-700'
-                            : order.status === 'DIPROSES' ||
-                                order.status === 'DIKIRIM'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-yellow-100 text-yellow-700'
+                            : order.status === 'DIBATALKAN'
+                              ? 'bg-red-100 text-red-700'
+                              : order.status === 'TERTUNDA'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-blue-100 text-blue-700'
                         }`}
                       >
                         {order.status === 'SELESAI'
                           ? '✓ Selesai'
-                          : order.status === 'DIKIRIM'
-                            ? '● Sedang Dikirim'
-                            : order.status === 'DIPROSES'
-                              ? '● Sedang Diproses'
-                              : '● Menunggu Pembayaran'}
+                          : order.status === 'DIBATALKAN'
+                            ? '✕ Dibatalkan'
+                            : order.status === 'DIKIRIM'
+                              ? '● Sedang Dikirim'
+                              : order.status === 'DIPROSES'
+                                ? '● Sedang Diproses'
+                                : '● Menunggu Pembayaran'}
                       </Badge>
 
                       <Badge className="bg-[#1A1A1B] text-white px-4 py-1.5 rounded-full border-none flex gap-1.5 items-center hover:bg-gray-800 transition-colors">
@@ -227,7 +404,7 @@ export default function OrderHistoryPage() {
                               <div className="flex gap-4">
                                 <div className="flex flex-col items-center">
                                   <div
-                                    className={`w-3 h-3 rounded-full ring-4 ${order.status === 'SELESAI' ? 'bg-[#7CB342] ring-[#E1EEDD]' : order.status === 'DIKIRIM' || order.status === 'DIPROSES' ? 'bg-blue-400 ring-blue-50' : 'bg-yellow-400 ring-yellow-50'}`}
+                                    className={`w-3 h-3 rounded-full ring-4 ${order.status === 'SELESAI' ? 'bg-green-500 ring-green-50' : order.status === 'DIBATALKAN' ? 'bg-red-500 ring-red-50' : order.status === 'TERTUNDA' ? 'bg-yellow-400 ring-yellow-50' : 'bg-blue-400 ring-blue-50'}`}
                                   ></div>
                                   <div className="w-0.5 h-10 bg-gray-100 mt-1"></div>
                                 </div>
@@ -235,16 +412,20 @@ export default function OrderHistoryPage() {
                                   <p className="font-bold text-[#1A1A1B] text-sm">
                                     {order.status === 'SELESAI'
                                       ? 'Pesanan Sudah Sampai'
-                                      : order.status === 'DIKIRIM'
-                                        ? 'Pesanan Sedang Dikirim'
-                                        : order.status === 'DIPROSES'
-                                          ? 'Pesanan Sedang Disiapkan'
-                                          : 'Menunggu Pembayaran'}
+                                      : order.status === 'DIBATALKAN'
+                                        ? 'Pesanan Dibatalkan'
+                                        : order.status === 'DIKIRIM'
+                                          ? 'Pesanan Sedang Dikirim'
+                                          : order.status === 'DIPROSES'
+                                            ? 'Pesanan Sedang Disiapkan'
+                                            : 'Menunggu Pembayaran'}
                                   </p>
                                   <p className="text-xs text-gray-500 font-medium">
                                     {order.status === 'SELESAI'
                                       ? 'Pesanan telah diterima dengan baik.'
-                                      : 'Kurir akan segera memperbarui status pengiriman.'}
+                                      : order.status === 'DIBATALKAN'
+                                        ? 'Pesanan telah dibatalkan.'
+                                        : 'Kurir akan segera memperbarui status pengiriman.'}
                                   </p>
                                 </div>
                               </div>
@@ -287,10 +468,18 @@ export default function OrderHistoryPage() {
                                 <MapPin className="w-3 h-3 text-[#7CB342]" />{' '}
                                 Shipping Address
                               </h3>
-                              <p className="text-[11px] font-bold text-[#1A1A1B] leading-relaxed">
-                                Pondok NutriScale, Blok A-12, <br />
-                                Jln. Kesehatan Raya, Kota Bandung, 40123
-                              </p>
+                              {order.alamatKirim ? (
+                                <p className="text-[11px] font-bold text-[#1A1A1B] leading-relaxed">
+                                  {order.alamatKirim.name} (
+                                  {order.alamatKirim.phone})<br />
+                                  {order.alamatKirim.address}
+                                </p>
+                              ) : (
+                                <p className="text-[11px] font-bold text-[#1A1A1B] leading-relaxed">
+                                  Pondok NutriScale, Blok A-12, <br />
+                                  Jln. Kesehatan Raya, Kota Bandung, 40123
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -328,6 +517,14 @@ export default function OrderHistoryPage() {
                               <MessageCircle className="w-4 h-4 mr-2 text-[#7CB342]" />{' '}
                               Hubungi Customer Service
                             </Button>
+
+                            {order.status === 'TERTUNDA' && (
+                              <OrderCancelButton
+                                rawDate={order.rawDate}
+                                orderId={order.id}
+                                onCancel={fetchOrders}
+                              />
+                            )}
                           </div>
                         </div>
                       </SheetContent>
