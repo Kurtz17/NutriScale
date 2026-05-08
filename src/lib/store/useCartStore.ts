@@ -1,9 +1,5 @@
-import { Product } from '@/components/ui/productCard';
+import { CartItem, Product } from '@/types/marketplace';
 import { create } from 'zustand';
-
-export type CartItem = Product & {
-  quantity: number;
-};
 
 interface CartState {
   cart: CartItem[];

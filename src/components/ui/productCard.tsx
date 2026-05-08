@@ -1,21 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Product } from '@/types/marketplace';
 import React from 'react';
-
-// Tambah export di sini biar bisa dibaca sama page.tsx
-export interface Product {
-  id: string | number;
-  name: string;
-  category: string;
-  image: string;
-  badges: { healthSafe: boolean; aiRecommended: boolean };
-  tags: string[];
-  calories: number;
-  protein: number;
-  price: number;
-  stok: number | null;
-}
 
 const ProductCard: React.FC<{
   product: Product;
