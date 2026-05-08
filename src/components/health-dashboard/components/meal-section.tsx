@@ -1,6 +1,7 @@
 'use client';
 
-import { Meal } from '../types';
+import { Meal } from '@/types/health-dashboard';
+
 import MealCard from './meal-card';
 
 export default function MealSection({ meals }: { meals: Meal[] }) {

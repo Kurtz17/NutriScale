@@ -9,9 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AddressData } from '@/types/profile';
 import { useEffect, useRef, useState } from 'react';
-
-import { AddressData } from '../types';
 
 interface WilayahItem {
   id: string;
