@@ -1,4 +1,4 @@
-import { CartItem } from '@/lib/store/useCartStore';
+import { CartItem } from '@/types/marketplace';
 import { ShoppingCart } from 'lucide-react';
 
 interface OrderListProps {

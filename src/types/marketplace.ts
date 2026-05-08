@@ -1,14 +1,19 @@
 export interface Product {
-  id: string;
+  id: string | number;
   name: string;
   category: string;
-  price: number;
+  image: string;
+  badges: {
+    healthSafe: boolean;
+    aiRecommended: boolean;
+  };
+  tags: string[];
   calories: number;
   protein: number;
-  image: string;
-  tags: string[];
-  isAIRecommended?: boolean;
+  price: number;
+  stok: number | null;
 }
+
 export interface CartItem extends Product {
   quantity: number;
 }

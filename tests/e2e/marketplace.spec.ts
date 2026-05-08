@@ -10,7 +10,9 @@ test.describe('Marketplace Page', () => {
       page.getByRole('heading', { name: 'Health Marketplace' }),
     ).toBeVisible();
     await expect(
-      page.getByText('Curated healthy foods & ingredients for your needs'),
+      page.getByText(
+        'Curated healthy foods & ingredients tailored for your needs',
+      ),
     ).toBeVisible();
   });
 
@@ -24,7 +26,7 @@ test.describe('Marketplace Page', () => {
   });
 
   test('harus merender input pencarian produk', async ({ page }) => {
-    const searchInput = page.getByPlaceholder('Search products...');
+    const searchInput = page.getByPlaceholder('Search healthy products...');
     await expect(searchInput).toBeVisible();
     await searchInput.fill('ayam');
     await page.waitForTimeout(500);
@@ -34,7 +36,7 @@ test.describe('Marketplace Page', () => {
   test('jika tidak ada produk yang cocok, harus muncul pesan "No products found"', async ({
     page,
   }) => {
-    const searchInput = page.getByPlaceholder('Search products...');
+    const searchInput = page.getByPlaceholder('Search healthy products...');
     await searchInput.fill('xxxxxxxxxnotexist');
     await expect(page.getByText('No products found')).toBeVisible({
       timeout: 3000,
@@ -42,10 +44,12 @@ test.describe('Marketplace Page', () => {
   });
 
   test('tombol Filter harus muncul dan bisa diklik', async ({ page }) => {
-    const filterBtn = page.getByRole('button', { name: /Filter/i });
+    const filterBtn = page.getByRole('button', { name: /All Categories/i });
     await expect(filterBtn).toBeVisible();
     await filterBtn.click();
-    await expect(page.getByText('All')).toBeVisible();
+    await expect(
+      page.getByRole('menuitemradio', { name: 'All' }),
+    ).toBeVisible();
   });
 
   test('keranjang harus menampilkan "Your cart is empty" saat kosong', async ({
