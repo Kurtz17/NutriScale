@@ -16,3 +16,16 @@ export interface AddressData {
   kelurahanId?: string;
   detailAlamat?: string;
 }
+
+export interface ProfileData {
+  id: string;
+  name: string;
+  email: string;
+  image: string;
+  username: string;
+  tanggalLahir: string;
+  phone: string;
+  address: AddressData;
+  notification: boolean;
+  providerId?: string;
+}
