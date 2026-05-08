@@ -14,7 +14,6 @@ export interface HealthFormData {
   larangan?: string[];
 }
 
-// 🔥 TYPE UNTUK SEMUA STEP (biar ga pakai any lagi)
 export interface StepProps {
   formData: HealthFormData;
   setFormData: (data: HealthFormData) => void;

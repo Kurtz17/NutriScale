@@ -2,9 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/lib/store/useCartStore';
+import { Meal } from '@/types/health-dashboard';
 import { Clock, Drumstick, Flame, ShoppingCart } from 'lucide-react';
-
-import { Meal } from '../types';
 
 export default function MealCard({ meal }: { meal: Meal }) {
   const addToCart = useCartStore((state) => state.addToCart);

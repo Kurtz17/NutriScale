@@ -1,16 +1,16 @@
 'use client';
 
+import { updateProfile } from '@/actions/profile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabase';
+import { AddressData } from '@/types/profile';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
-import { updateProfile } from './actions';
 import AddressFields from './components/address-fields';
-import { AddressData } from './types';
 
 interface ProfileData {
   id: string;

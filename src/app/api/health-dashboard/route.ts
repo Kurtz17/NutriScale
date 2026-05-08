@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { FoodItem, Meal, MealPlanDetail, Stat } from '@/types/health-dashboard';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
@@ -13,7 +14,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Try to get latest health profile for user
+    // Get latest health profile
     const profile = await prisma.profilKesehatan.findFirst({
       where: { userId: session.user.id },
       include: {
@@ -25,55 +26,15 @@ export async function GET() {
       },
     });
 
-    // If we have actual DB data, map it. Otherwise provide safe defaults/empty
-    let stats = [
+    // Default stats
+    let stats: Stat[] = [
       { title: 'WHO Z-Score (HAZ)', value: '+0.0 SD', status: 'Normal' },
       { title: 'Daily Calories', value: `0 / 0`, progress: 0 },
       { title: 'Protein Intake', value: `0 / 0g`, progress: 0 },
       { title: 'Health Status', value: 'No Data Yet' },
     ];
 
-    type MealEntry = {
-      time: string;
-      type: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack';
-      totalCalories: number;
-      totalProtein: number;
-      items: {
-        productId?: string;
-        image?: string;
-        price?: number;
-        recommended_quantity?: number;
-        title: string;
-        calories: number;
-        protein: number;
-        tags: string[];
-      }[];
-    };
-    let meals: MealEntry[] = [];
-
-    interface FoodItem {
-      produk_id?: string;
-      gambar?: string;
-      harga?: number;
-      nama_makanan: string;
-      calories: number;
-      protein: number;
-      fat: number;
-      carbs: number;
-      match_score: number;
-      recommended_quantity?: number;
-    }
-
-    interface MealPlanDetail {
-      target_kalori_harian?: number;
-      distribusi?: {
-        protein_g?: number;
-        fat_g?: number;
-        carbs_g?: number;
-      };
-      narasiAI?: string;
-      [key: string]: unknown; // For dynamic meal session keys
-    }
+    const meals: Meal[] = [];
 
     if (profile && profile.riwayatAnalisis.length > 0) {
       const latest = profile.riwayatAnalisis[0];
@@ -87,16 +48,16 @@ export async function GET() {
       const targetProtein = mealPlanDetail?.distribusi?.protein_g || 0;
       const narasiAI = mealPlanDetail?.narasiAI || '';
 
-      // Map sessions to meals
+      // Meal sessions config
       const sessions = [
         { key: 'rekomendasi_pagi', label: 'Breakfast', time: '07:00 AM' },
         { key: 'rekomendasi_snack_pagi', label: 'Snack', time: '10:00 AM' },
         { key: 'rekomendasi_siang', label: 'Lunch', time: '01:00 PM' },
         { key: 'rekomendasi_snack_sore', label: 'Snack', time: '04:00 PM' },
         { key: 'rekomendasi_malam', label: 'Dinner', time: '07:00 PM' },
-      ];
+      ] as const;
 
-      // Calculate actual intake from today's orders
+      // Calculate actual intake from today's successful orders
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
 
@@ -108,9 +69,7 @@ export async function GET() {
         },
         include: {
           orderItems: {
-            include: {
-              produk: true,
-            },
+            include: { produk: true },
           },
         },
       });
@@ -130,24 +89,22 @@ export async function GET() {
         });
       });
 
-      meals = [];
-
+      // Map sessions to recommended meals
       sessions.forEach((s) => {
         const foodItems = (mealPlanDetail?.[s.key] as FoodItem[]) || [];
         if (foodItems.length > 0) {
-          // Check if all items in this session have been purchased today
           const allPurchased = foodItems.every(
             (food) => food.produk_id && purchasedProductIds.has(food.produk_id),
           );
 
           if (!allPurchased) {
-            let totalCalories = 0;
-            let totalProtein = 0;
+            let sessionCalories = 0;
+            let sessionProtein = 0;
 
             const items = foodItems.map((food) => {
               const qty = food.recommended_quantity || 1;
-              totalCalories += food.calories * qty;
-              totalProtein += food.protein * qty;
+              sessionCalories += food.calories * qty;
+              sessionProtein += food.protein * qty;
 
               return {
                 productId: food.produk_id,
@@ -163,9 +120,9 @@ export async function GET() {
 
             meals.push({
               time: s.time,
-              type: s.label as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack',
-              totalCalories: Math.round(totalCalories),
-              totalProtein: Math.round(totalProtein),
+              type: s.label,
+              totalCalories: Math.round(sessionCalories),
+              totalProtein: Math.round(sessionProtein),
               items,
             });
           }
@@ -209,11 +166,12 @@ export async function GET() {
     return NextResponse.json({
       stats,
       meals,
+      narasiAI: '',
       targetCalories: 0,
       targetProtein: 0,
     });
   } catch (error) {
-    console.error(error);
+    console.error('Health Dashboard Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch health data' },
       { status: 500 },

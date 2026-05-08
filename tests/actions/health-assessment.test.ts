@@ -1,4 +1,4 @@
-import { saveHealthAssessment } from '@/app/health-assessment/actions';
+import { saveHealthAssessment } from '@/actions/health-assessment';
 import prisma from '@/lib/prisma';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
