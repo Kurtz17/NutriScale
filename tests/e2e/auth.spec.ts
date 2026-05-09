@@ -109,8 +109,8 @@ test.describe('Authentication - Register Page', () => {
     await page
       .locator('form')
       .evaluate((form) => form.setAttribute('novalidate', ''));
-    await page.getByRole('button', { name: /Sign Up/i }).click();
-    await expect(page.locator('text=Mohon isi semua data akun.')).toBeVisible();
+    await page.locator('form button[type="submit"]').click();
+    await expect(page.getByText('Mohon isi semua data akun.')).toBeVisible();
   });
 
   test('harus menampilkan error jika password dan konfirmasi tidak cocok', async ({
@@ -124,9 +124,9 @@ test.describe('Authentication - Register Page', () => {
     const passwordFields = page.getByPlaceholder('••••••••');
     await passwordFields.nth(0).fill('password123');
     await passwordFields.nth(1).fill('password456');
-    await page.getByRole('button', { name: /Sign Up/i }).click();
+    await page.locator('form button[type="submit"]').click();
     await expect(
-      page.locator('text=Password dan Konfirmasi Password tidak cocok!'),
+      page.getByText('Password dan Konfirmasi Password tidak cocok!'),
     ).toBeVisible();
   });
 

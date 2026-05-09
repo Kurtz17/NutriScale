@@ -13,10 +13,9 @@ test.describe('Health Assessment Page', () => {
   test('tombol "←" (Back) harus muncul di Step 1 dan mengarah ke homepage', async ({
     page,
   }) => {
-    const backBtn = page.locator('button', { hasText: '←' });
-    if (await backBtn.isVisible()) {
-      await backBtn.click();
-      await expect(page).toHaveURL('/');
-    }
+    const backBtn = page.getByRole('button', { name: '←' });
+    await expect(backBtn).toBeVisible();
+    await backBtn.click();
+    await expect(page).toHaveURL('/');
   });
 });

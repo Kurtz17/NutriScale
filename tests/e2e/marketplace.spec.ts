@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test';
 test.describe('Marketplace Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/marketplace');
+    await page.evaluate(() => localStorage.removeItem('nutriscale-cart'));
+    await page.reload();
   });
 
   test('harus merender heading "Health Marketplace"', async ({ page }) => {
@@ -51,6 +53,18 @@ test.describe('Marketplace Page', () => {
   test('keranjang harus menampilkan "Your cart is empty" saat kosong', async ({
     page,
   }) => {
+    await page.route('**/api/cart', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ cart: [] }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+    await page.reload();
     await expect(page.getByText('Your cart is empty')).toBeVisible();
   });
 });
