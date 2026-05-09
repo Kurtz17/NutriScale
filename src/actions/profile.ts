@@ -3,10 +3,9 @@
 import { Prisma } from '@/app/generated/prisma/client';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { AddressData } from '@/types/profile';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
-
-import { AddressData } from './types';
 
 export async function updateProfile(data: {
   name: string;

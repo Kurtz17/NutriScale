@@ -13,9 +13,7 @@ test.describe('Authentication - Login Page', () => {
     ).toBeVisible();
     await expect(page.getByLabel(/Email Address/i)).toBeVisible();
     await expect(page.getByLabel(/^Password$/i)).toBeVisible();
-    await expect(
-      page.getByRole('main').getByRole('button', { name: /Sign In/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /Sign In/i })).toBeVisible();
     await expect(
       page.getByRole('link', { name: /Forgot Password/i }),
     ).toBeVisible();
@@ -28,10 +26,7 @@ test.describe('Authentication - Login Page', () => {
     await page
       .locator('form')
       .evaluate((form) => form.setAttribute('novalidate', ''));
-    await page
-      .getByRole('main')
-      .getByRole('button', { name: /Sign In/i })
-      .click();
+    await page.getByRole('button', { name: /Sign In/i }).click();
     const errorMsg = page.locator('text=Mohon isi email dan password.');
     await expect(errorMsg).toBeVisible();
   });
@@ -41,10 +36,7 @@ test.describe('Authentication - Login Page', () => {
       .getByPlaceholder('your.email@example.com')
       .fill('salah@email.com');
     await page.getByPlaceholder('••••••••').fill('passwordsalah123');
-    await page
-      .getByRole('main')
-      .getByRole('button', { name: /Sign In/i })
-      .click();
+    await page.getByRole('button', { name: /Sign In/i }).click();
 
     // Menunggu respons API dan error muncul
     const errorMsg = page.locator('.text-red-500');
@@ -70,10 +62,7 @@ test.describe('Authentication - Login Page', () => {
       .getByPlaceholder('your.email@example.com')
       .fill('test@example.com');
     await page.getByPlaceholder('••••••••').fill('somepassword');
-    await page
-      .getByRole('main')
-      .getByRole('button', { name: /Sign In/i })
-      .click();
+    await page.getByRole('button', { name: /Sign In/i }).click();
 
     const loadingBtn = page.getByRole('button', { name: /Masuk\.\.\./i });
     const isLoading = await loadingBtn.isVisible().catch(() => false);

@@ -8,8 +8,8 @@ export function SmartCart({
   onCheckout,
 }: {
   items: CartItem[];
-  onUpdateQty: (id: string, delta: number) => void;
-  onRemove: (id: string) => void;
+  onUpdateQty: (id: string | number, delta: number) => void;
+  onRemove: (id: string | number) => void;
   onCheckout: () => void;
 }) {
   const subtotal = items.reduce(
@@ -57,7 +57,7 @@ export function SmartCart({
       </div>
 
       {/* Cart Items List - Fix max-h class */}
-      <div className="flex flex-col gap-4 max-h-100 overflow-y-auto pr-2">
+      <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2">
         {items.length === 0 && (
           <p className="text-gray-400 text-xs text-center py-10 italic">
             Keranjang kosong

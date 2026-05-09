@@ -1,8 +1,14 @@
 'use server';
 
-import { JenisKelamin, KategoriKondisi } from '@/app/generated/prisma/client';
-import { HealthFormData } from '@/components/health-assessment/types/health';
+import { JenisKelamin } from '@/app/generated/prisma/client';
+import {
+  formatPantanganMedis,
+  formatUsiaKehamilan,
+  mapCategory,
+  mapGender,
+} from '@/lib/health-assessment-utils';
 import prisma from '@/lib/prisma';
+import { HealthFormData } from '@/types/health-assessment';
 import crypto from 'crypto';
 
 export async function saveHealthAssessment(
@@ -14,40 +20,14 @@ export async function saveHealthAssessment(
       return { success: false, error: 'Unauthorized. User ID is missing.' };
     }
 
-    // Mapping enum Gender
-    let jenisKelamin: JenisKelamin = JenisKelamin.LAKI_LAKI;
-    if (formData.gender === 'female') {
-      jenisKelamin = JenisKelamin.PEREMPUAN;
-    }
+    const jenisKelamin = mapGender(formData.gender);
+    const kategoriKondisi = mapCategory(formData.category);
+    const pantanganMedis = formatPantanganMedis(formData);
+    const usiaKehamilanMinggu = formatUsiaKehamilan(formData);
 
-    // Mapping enum Kategori
-    let kategoriKondisi: KategoriKondisi = KategoriKondisi.UMUM;
-    if (formData.category === 'balita') {
-      kategoriKondisi = KategoriKondisi.ANAK_BALITA;
-    } else if (formData.category === 'ibu_hamil') {
-      kategoriKondisi = KategoriKondisi.IBU_HAMIL;
-    } else if (formData.category === 'pasca_operasi') {
-      kategoriKondisi = KategoriKondisi.PASCA_OPERASI;
-    }
-
-    // Format pantangan medis jika ada (Hanya untuk Pasca Operasi)
-    const pantanganMedis =
-      formData.category === 'pasca_operasi' &&
-      Array.isArray(formData.larangan) &&
-      formData.larangan.length > 0
-        ? formData.larangan.join(', ')
-        : null;
-
-    // Usia kehamilan (Hanya untuk Ibu Hamil)
-    const usiaKehamilanMinggu =
-      formData.category === 'ibu_hamil' && formData.gestasi !== ''
-        ? Number(formData.gestasi)
-        : null;
-
-    // Menghasilkan ID unik untuk profil
     const profilId = crypto.randomUUID();
 
-    // Cek profil pertama user ini
+    // Check for existing profile
     const existingProfile = await prisma.profilKesehatan.findFirst({
       where: { userId: userId },
     });
@@ -104,7 +84,7 @@ export async function saveHealthAssessment(
                 : 'PEREMPUAN',
             beratBadan: formData.weight !== '' ? Number(formData.weight) : 0,
             tinggiBadan: formData.height !== '' ? Number(formData.height) : 0,
-            kategoriKondisi: kategoriKondisi,
+            kategoriKondisi,
             usiaKehamilanMinggu,
             pantanganMedis,
           }),
@@ -130,7 +110,7 @@ export async function saveHealthAssessment(
           },
         });
 
-        // 2. Simpan Meal Plan (Sesuai instruksi: narasiAI masuk ke JSON)
+        // 2. Simpan Meal Plan
         await prisma.mealPlan.create({
           data: {
             id: crypto.randomUUID(),
@@ -144,7 +124,6 @@ export async function saveHealthAssessment(
       }
     } catch (aiError) {
       console.error('AI Engine Integration Failed:', aiError);
-      // Kita tidak menggagalkan seluruh request jika AI gagal, cukup log.
     }
 
     return { success: true };

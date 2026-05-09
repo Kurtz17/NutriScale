@@ -1,10 +1,9 @@
+import ProfileForm from '@/components/profile/profile-form';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { AddressData } from '@/types/profile';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-
-import ProfileForm from './profile-form';
-import { AddressData } from './types';
 
 export default async function ProfileSettingsPage() {
   const session = await auth.api.getSession({
@@ -34,8 +33,10 @@ export default async function ProfileSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#DDE5D6] px-6 md:px-20 py-12">
-      <ProfileForm initialData={initialData} />
+    <div className="min-h-screen bg-[#E6EFE3] px-6 md:px-10 py-8">
+      <div className="max-w-7xl mx-auto">
+        <ProfileForm initialData={initialData} />
+      </div>
     </div>
   );
 }
