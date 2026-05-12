@@ -5,7 +5,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -19,56 +18,22 @@ import {
   Trash2,
   UserCircle,
 } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
-
-// Mock Data Sementara
-const mockUsers = [
-  {
-    id: '1',
-    name: 'Zahran Muntazar',
-    email: 'zahran@nutriscale.com',
-    role: 'Admin',
-    status: 'Aktif',
-    joinDate: '01 Mei 2026',
-  },
-  {
-    id: '2',
-    name: 'Jannatul Sabila',
-    email: 'sabila@example.com',
-    role: 'User',
-    status: 'Aktif',
-    joinDate: '03 Mei 2026',
-  },
-  {
-    id: '3',
-    name: 'Budi Santoso',
-    email: 'budi.s@example.com',
-    role: 'User',
-    status: 'Nonaktif',
-    joinDate: '05 Mei 2026',
-  },
-  {
-    id: '4',
-    name: 'Raymond Frans',
-    email: 'raymond@nutriscale.com',
-    role: 'Admin',
-    status: 'Aktif',
-    joinDate: '06 Mei 2026',
-  },
-  {
-    id: '5',
-    name: 'Arya Rafi',
-    email: 'arya@example.com',
-    role: 'User',
-    status: 'Nonaktif',
-    joinDate: '08 Mei 2026',
-  },
-];
+import { useEffect, useMemo, useState } from 'react';
 
 // Define Type
-type User = (typeof mockUsers)[0];
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string | null;
+  banned: boolean | null;
+  createdAt: string;
+  lastOnline: string | null;
+}
 
 export default function UserManagementPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -77,17 +42,51 @@ export default function UserManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('/api/admin/users');
+        const result = await response.json();
+        if (result.success) {
+          setUsers(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   // Fitur Search & Filter
   const filteredUsers = useMemo(() => {
-    return mockUsers.filter((user) => {
+    return users.filter((user) => {
       const matchSearch =
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+      let userStatus = 'Aktif';
+      if (user.banned) {
+        userStatus = 'Banned';
+      } else if (!user.lastOnline) {
+        userStatus = 'Nonaktif';
+      } else {
+        const lastOnlineDate = new Date(user.lastOnline);
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        if (lastOnlineDate < oneMonthAgo) {
+          userStatus = 'Nonaktif';
+        }
+      }
+
       const matchStatus =
-        statusFilter === 'All' ? true : user.status === statusFilter;
+        statusFilter === 'All' ? true : userStatus === statusFilter;
+
       return matchSearch && matchStatus;
     });
-  }, [searchQuery, statusFilter]);
+  }, [users, searchQuery, statusFilter]);
 
   // Handler buka modal
   const handleOpenDetail = (user: User) => {
@@ -125,7 +124,7 @@ export default function UserManagementPage() {
 
           <div className="flex items-center gap-2 w-full sm:w-auto bg-white p-1.5 rounded-2xl shadow-sm overflow-x-auto">
             <Filter className="w-4 h-4 text-gray-400 ml-2 hidden sm:block" />
-            {['All', 'Aktif', 'Nonaktif'].map((status) => (
+            {['All', 'Aktif', 'Nonaktif', 'Banned'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
@@ -159,67 +158,120 @@ export default function UserManagementPage() {
                   <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">
                     Join Date
                   </th>
+                  <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                    Last Online
+                  </th>
                   <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-right">
                     Action
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <tr
-                      key={user.id}
-                      className="border-b border-gray-50 hover:bg-[#f8faf7]/50 transition-colors"
-                    >
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0">
-                            <UserCircle className="w-6 h-6" />
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="p-10 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-gray-400 font-bold">
+                          Memuat data user...
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => {
+                    let userStatus = 'Aktif';
+                    let statusColor = 'bg-green-100 text-green-700';
+
+                    if (user.banned) {
+                      userStatus = 'Banned';
+                      statusColor = 'bg-red-100 text-red-700';
+                    } else if (!user.lastOnline) {
+                      userStatus = 'Nonaktif';
+                      statusColor = 'bg-gray-100 text-gray-500';
+                    } else {
+                      const lastOnlineDate = new Date(user.lastOnline);
+                      const oneMonthAgo = new Date();
+                      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                      if (lastOnlineDate < oneMonthAgo) {
+                        userStatus = 'Nonaktif';
+                        statusColor = 'bg-gray-100 text-gray-500';
+                      }
+                    }
+
+                    const joinDate = new Date(
+                      user.createdAt,
+                    ).toLocaleDateString('id-ID', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    });
+
+                    const lastActive = user.lastOnline
+                      ? new Date(user.lastOnline).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : 'Belum pernah';
+
+                    return (
+                      <tr
+                        key={user.id}
+                        className="border-b border-gray-50 hover:bg-[#f8faf7]/50 transition-colors"
+                      >
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+                              <UserCircle className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900 text-sm">
+                                {user.name}
+                              </p>
+                              <p className="text-xs text-gray-400 font-medium">
+                                {user.email}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-gray-900 text-sm">
-                              {user.name}
-                            </p>
-                            <p className="text-xs text-gray-400 font-medium">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <span className="text-sm font-bold text-gray-700">
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg ${
-                            user.status === 'Aktif'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="text-sm font-medium text-gray-500">
-                          {user.joinDate}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        {/* Tombol Detail untuk memicu Modal */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenDetail(user)}
-                          className="rounded-xl border-2 border-gray-100 font-bold hover:bg-gray-50 transition-all text-xs"
-                        >
-                          Detail
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="p-4">
+                          <span className="text-sm font-bold text-gray-700 capitalize">
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span
+                            className={`text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg ${statusColor}`}
+                          >
+                            {userStatus}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-sm font-medium text-gray-500">
+                            {joinDate}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-sm font-medium text-gray-500">
+                            {lastActive}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenDetail(user)}
+                            className="rounded-xl border-2 border-gray-100 font-bold hover:bg-gray-50 transition-all text-xs"
+                          >
+                            Detail
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={5} className="p-10 text-center">
@@ -273,7 +325,7 @@ export default function UserManagementPage() {
                           Role
                         </span>
                       </div>
-                      <span className="text-sm font-bold text-gray-900">
+                      <span className="text-sm font-bold text-gray-900 capitalize">
                         {selectedUser.role}
                       </span>
                     </div>
@@ -285,7 +337,14 @@ export default function UserManagementPage() {
                         </span>
                       </div>
                       <span className="text-sm font-bold text-gray-900">
-                        {selectedUser.joinDate}
+                        {new Date(selectedUser.createdAt).toLocaleDateString(
+                          'id-ID',
+                          {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          },
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -296,9 +355,25 @@ export default function UserManagementPage() {
                         </span>
                       </div>
                       <span
-                        className={`text-[10px] font-black uppercase px-3 py-1 rounded-lg ${selectedUser.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                        className={`text-[10px] font-black uppercase px-3 py-1 rounded-lg ${
+                          selectedUser.banned
+                            ? 'bg-red-100 text-red-700'
+                            : !selectedUser.lastOnline ||
+                                new Date().getTime() -
+                                  new Date(selectedUser.lastOnline).getTime() >
+                                  30 * 24 * 60 * 60 * 1000
+                              ? 'bg-gray-100 text-gray-500'
+                              : 'bg-green-100 text-green-700'
+                        }`}
                       >
-                        {selectedUser.status}
+                        {selectedUser.banned
+                          ? 'Banned'
+                          : !selectedUser.lastOnline ||
+                              new Date().getTime() -
+                                new Date(selectedUser.lastOnline).getTime() >
+                                30 * 24 * 60 * 60 * 1000
+                            ? 'Nonaktif'
+                            : 'Aktif'}
                       </span>
                     </div>
                   </div>
@@ -310,13 +385,13 @@ export default function UserManagementPage() {
                     <Button
                       variant="outline"
                       className={`w-full rounded-2xl py-6 font-bold border-2 transition-all ${
-                        selectedUser.status === 'Aktif'
+                        !selectedUser.banned
                           ? 'text-orange-600 border-orange-100 hover:bg-orange-50'
                           : 'text-green-600 border-green-100 hover:bg-green-50'
                       }`}
                       onClick={() => console.log('Ubah Status clicked')} // Placeholder
                     >
-                      {selectedUser.status === 'Aktif'
+                      {!selectedUser.banned
                         ? 'Nonaktifkan Akun Ini'
                         : 'Aktifkan Akun Ini'}
                     </Button>

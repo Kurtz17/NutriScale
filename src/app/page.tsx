@@ -8,11 +8,18 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LandingPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const isLoggedIn = !!session?.user;
+
+  useEffect(() => {
+    if (session?.user?.role === 'admin') {
+      router.push('/admin/user-management');
+    }
+  }, [session, router]);
 
   const categories = [
     {

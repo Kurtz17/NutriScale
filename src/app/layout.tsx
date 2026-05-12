@@ -1,3 +1,4 @@
+import ActivityProvider from '@/components/providers/activity-provider';
 import Footer from '@/components/ui/footer';
 import Navbar from '@/components/ui/navbar';
 import { Toaster } from '@/components/ui/sonner';
@@ -35,6 +36,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-[#E1EEDD]">
+        <ActivityProvider />
         <Navbar />
 
         <main className="grow">{children}</main>
