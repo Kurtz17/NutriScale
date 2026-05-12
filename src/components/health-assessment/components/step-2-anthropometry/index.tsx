@@ -2,9 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { HealthFormData } from '@/types/health-assessment';
 import { toast } from 'sonner';
-
-import { HealthFormData } from '../../types/health';
 
 type Props = {
   nextStep: () => void;

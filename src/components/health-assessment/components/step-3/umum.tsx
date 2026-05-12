@@ -1,12 +1,9 @@
 'use client';
 
-import { saveHealthAssessment } from '@/app/health-assessment/actions';
-import {
-  HealthFormData,
-  StepProps,
-} from '@/components/health-assessment/types/health';
+import { saveHealthAssessment } from '@/actions/health-assessment';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { HealthFormData, StepProps } from '@/types/health-assessment';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
