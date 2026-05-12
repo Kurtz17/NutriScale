@@ -1,5 +1,7 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+
 type ProductFiltersProps = {
   search: string;
   onSearchChange: (value: string) => void;
@@ -20,7 +22,7 @@ export default function ProductFilters({
   kategoriOptions,
 }: ProductFiltersProps) {
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mb-6">
+    <div className="flex items-center gap-3 flex-1">
       {/* Search */}
       <div className="relative flex-1">
         <svg
@@ -36,12 +38,12 @@ export default function ProductFilters({
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
-        <input
+        <Input
           type="text"
           placeholder="Cari nama produk..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="pl-9 h-9"
         />
       </div>
 
@@ -49,7 +51,7 @@ export default function ProductFilters({
       <select
         value={selectedKategori}
         onChange={(e) => onKategoriChange(e.target.value)}
-        className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white min-w-[160px]"
+        className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white h-9"
       >
         <option value="">Semua Kategori</option>
         {kategoriOptions.map((k) => (
@@ -63,7 +65,7 @@ export default function ProductFilters({
       <select
         value={selectedStatus}
         onChange={(e) => onStatusChange(e.target.value)}
-        className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white min-w-[140px]"
+        className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white h-9"
       >
         <option value="">Semua Status</option>
         <option value="aktif">Aktif</option>

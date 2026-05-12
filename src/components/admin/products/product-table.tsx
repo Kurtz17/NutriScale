@@ -10,12 +10,15 @@ export type Produk = {
   stok: number | null;
   label_risiko: string | null;
   calories: number | null;
+  protein: number | null;
   image: string | null;
 };
 
 type ProductTableProps = {
   data: Produk[];
   isLoading: boolean;
+  onEdit: (produk: Produk) => void;
+  onDelete: (produk: Produk) => void;
 };
 
 function getKalori(calories: number | null): string {
@@ -32,7 +35,12 @@ function formatHarga(price: number | null): string {
   }).format(price);
 }
 
-export default function ProductTable({ data, isLoading }: ProductTableProps) {
+export default function ProductTable({
+  data,
+  isLoading,
+  onEdit,
+  onDelete,
+}: ProductTableProps) {
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -81,6 +89,9 @@ export default function ProductTable({ data, isLoading }: ProductTableProps) {
               <th className="text-left px-4 py-3 font-semibold text-gray-600">
                 Status
               </th>
+              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+                Aksi
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -113,6 +124,22 @@ export default function ProductTable({ data, isLoading }: ProductTableProps) {
                     stok={produk.stok}
                     labelRisiko={produk.label_risiko}
                   />
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onEdit(produk)}
+                      className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(produk)}
+                      className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
