@@ -41,6 +41,9 @@ export function OrderStatusDropdown({
     if (paymentStatus === 'BERHASIL' && option.value === 'TERTUNDA') {
       return false;
     }
+    if (value === 'DIKIRIM' && option.value === 'DIPROSES') {
+      return false;
+    }
     return true;
   });
 
