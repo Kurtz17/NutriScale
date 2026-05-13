@@ -16,7 +16,11 @@ export function useLogin() {
   });
 
   useEffect(() => {
-    if (session) {
+    if (!session) return;
+
+    if (session.user.role === 'admin') {
+      router.push('/admin/user-management');
+    } else {
       router.push('/');
     }
   }, [session, router]);
@@ -50,7 +54,11 @@ export function useLogin() {
     }
 
     if (data) {
-      router.push('/');
+      if (data.user.role === 'admin') {
+        router.push('/admin/user-management');
+      } else {
+        router.push('/');
+      }
     }
   };
 
