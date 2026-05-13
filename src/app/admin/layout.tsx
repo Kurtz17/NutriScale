@@ -1,5 +1,5 @@
 'use client';
-
+import { authClient } from '@/lib/auth-client';
 import {
   LayoutDashboard,
   LogOut,
@@ -18,6 +18,11 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
 
+  const handleLogout = async () => {
+    await authClient.signOut();
+    router.push('/');
+  };
+
   // Daftar Menu Navigasi sesuai Mockup Desain
   const navItems = [
     {
@@ -32,13 +37,13 @@ export default function AdminLayout({
     },
     {
       icon: <Package size={20} />,
-      label: 'Catalog',
-      path: '/admin/catalog', // Jatah Sabila FE3
+      label: 'Orders Management',
+      path: '/admin/orders',
     },
     {
       icon: <Settings size={20} />,
-      label: 'AI Parameters',
-      path: '/admin/ai-parameters',
+      label: 'Product Catalog',
+      path: '/admin/catalogues',
     },
   ];
 
@@ -85,9 +90,12 @@ export default function AdminLayout({
 
         {/* Footer Sidebar: Logout */}
         <div className="p-6 border-t border-gray-800/50">
-          <button className="flex items-center gap-3 text-gray-500 hover:text-red-400 transition-all font-bold text-sm w-full px-4 py-3 rounded-2xl hover:bg-red-400/10">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 text-red-500 hover:text-red-400 transition-all font-bold text-sm w-full px-4 py-3 rounded-2xl hover:bg-red-400/10"
+          >
             <LogOut size={20} />
-            <span>Logout System</span>
+            <span>Logout</span>
           </button>
         </div>
       </aside>

@@ -17,7 +17,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (session?.user?.role === 'admin') {
-      router.push('/admin/user-management');
+      router.push('/admin/dashboard');
     }
   }, [session, router]);
 

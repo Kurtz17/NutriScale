@@ -19,7 +19,7 @@ export function useLogin() {
     if (!session) return;
 
     if (session.user.role === 'admin') {
-      router.push('/admin/user-management');
+      router.push('/admin/dashboard');
     } else {
       router.push('/');
     }
@@ -55,7 +55,7 @@ export function useLogin() {
 
     if (data) {
       if (data.user.role === 'admin') {
-        router.push('/admin/user-management');
+        router.push('/admin/dashboard');
       } else {
         router.push('/');
       }

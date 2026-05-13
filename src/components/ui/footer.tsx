@@ -1,12 +1,25 @@
 'use client';
+import { authClient } from '@/lib/auth-client';
 import { Apple } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FaGithub, FaInstagram, FaXTwitter } from 'react-icons/fa6';
 
 export default function Footer() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+  const isAdmin = session?.user?.role === 'admin';
+  const isAuthPage = [
+    '/login',
+    '/register',
+    '/reset-password',
+    '/recovery',
+  ].includes(pathname);
+
+  if (isAdmin || isAuthPage) return null;
+
   return (
     <footer className="bg-[#E1EEDD] text-black pb-10 rounded-t-[3rem] mt-20">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4">
