@@ -50,7 +50,7 @@ export default function ProductTable({
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="border-b-2 border-gray-50">
-              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-left">
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
                 Produk
               </th>
               <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">

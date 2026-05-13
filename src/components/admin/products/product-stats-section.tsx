@@ -1,7 +1,6 @@
+import { StatCard } from '@/components/admin/shared/stat-card';
 import { Produk } from '@/types/admin/product';
 import { AlertCircle, Package, ShoppingBag } from 'lucide-react';
-
-import { StatCard } from './stat-card';
 
 type ProductStatsSectionProps = {
   products: Produk[];

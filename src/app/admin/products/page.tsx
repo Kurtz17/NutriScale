@@ -1,11 +1,11 @@
 'use client';
 
-import DeleteConfirmModal from '@/components/admin/products/delete-confirm-modal';
+import DeleteConfirmModal from '@/components/admin/products/form/delete-confirm-modal';
+import ProductFormModal from '@/components/admin/products/form/product-form-modal';
 import ProductFilters from '@/components/admin/products/product-filters';
-import ProductFormModal from '@/components/admin/products/product-form-modal';
 import { ProductHeader } from '@/components/admin/products/product-header';
 import { ProductStatsSection } from '@/components/admin/products/product-stats-section';
-import ProductTable from '@/components/admin/products/product-table';
+import ProductTable from '@/components/admin/products/table/product-table';
 import { useProductManager } from '@/hooks/admin/useProductManager';
 
 export default function AdminProductsPage() {
