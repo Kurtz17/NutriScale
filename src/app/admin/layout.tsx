@@ -32,17 +32,17 @@ export default function AdminLayout({
     },
     {
       icon: <UserCircle size={20} />,
-      label: 'User Management',
+      label: 'Manajemen Pengguna',
       path: '/admin/user-management',
     },
     {
       icon: <Package size={20} />,
-      label: 'Orders Management',
+      label: 'Manajemen Pesanan',
       path: '/admin/orders',
     },
     {
       icon: <ShoppingBag size={20} />,
-      label: 'Product Catalog',
+      label: 'Katalog Produk',
       path: '/admin/products',
     },
   ];
@@ -65,7 +65,7 @@ export default function AdminLayout({
               NutriScale
             </h1>
             <p className="text-[10px] text-[#7CB342] font-bold uppercase tracking-widest mt-1">
-              Admin Panel
+              Panel Admin
             </p>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function AdminLayout({
             className="flex items-center gap-3 text-red-500 hover:text-red-400 transition-all font-bold text-sm w-full px-4 py-3 rounded-2xl hover:bg-red-400/10"
           >
             <LogOut size={20} />
-            <span>Logout</span>
+            <span>Keluar</span>
           </button>
         </div>
       </aside>

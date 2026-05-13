@@ -1,65 +1,68 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const range = searchParams.get('range') || '7d';
+
+    let daysToFetch = 7;
+    if (range === '30d') daysToFetch = 30;
+    if (range === '90d') daysToFetch = 90;
+
     const totalUser = await prisma.user.count({
-      where: {
-        role: {
-          not: 'admin',
-        },
-      },
+      where: { role: { not: 'admin' } },
     });
 
     const totalOrder = await prisma.pesanan.count();
 
-    const revenueResult = await prisma.pesanan.aggregate({
-      _sum: {
-        totalHarga: true,
-      },
+    const activeOrders = await prisma.pesanan.count({
       where: {
-        statusPesanan: 'SELESAI',
+        statusPesanan: { in: ['DIPROSES', 'DIKIRIM'] },
+      },
+    });
+
+    const revenueResult = await prisma.pesanan.aggregate({
+      _sum: { totalHarga: true },
+      where: {
+        statusPesanan: { in: ['DIPROSES', 'DIKIRIM', 'SELESAI'] },
       },
     });
     const totalRevenue = Number(revenueResult._sum.totalHarga || 0);
 
-    // Get orders from the last 7 days
     const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - (daysToFetch - 1));
 
     const recentOrders = await prisma.pesanan.findMany({
       where: {
-        createdAt: {
-          gte: sevenDaysAgo,
-        },
+        createdAt: { gte: startDate },
+        statusPesanan: { not: 'DIBATALKAN' },
       },
       select: {
         totalHarga: true,
         createdAt: true,
         statusPesanan: true,
       },
-      orderBy: {
-        createdAt: 'asc',
-      },
+      orderBy: { createdAt: 'asc' },
     });
 
-    // Grouping recent orders by day
     const dailyStats: Record<string, { revenue: number; orders: number }> = {};
 
-    // Initialize the last 7 days with 0
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const dateString = date.toISOString().split('T')[0];
+    // Initialize the requested range
+    for (let i = 0; i < daysToFetch; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      const dateString = date.toLocaleDateString('en-CA');
       dailyStats[dateString] = { revenue: 0, orders: 0 };
     }
 
     recentOrders.forEach((order) => {
-      const dateString = order.createdAt.toISOString().split('T')[0];
+      const dateString = new Date(order.createdAt).toLocaleDateString('en-CA');
       if (dailyStats[dateString]) {
         dailyStats[dateString].orders += 1;
-        if (order.statusPesanan === 'SELESAI') {
-          dailyStats[dateString].revenue += Number(order.totalHarga);
-        }
+        dailyStats[dateString].revenue += Number(order.totalHarga);
       }
     });
 
@@ -74,6 +77,7 @@ export async function GET() {
       data: {
         totalUser,
         totalOrder,
+        activeOrders,
         totalRevenue,
         weeklySummary,
       },

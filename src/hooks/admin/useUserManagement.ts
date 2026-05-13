@@ -5,7 +5,7 @@ export function useUserManagement() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<UserStatus>('All');
+  const [statusFilter, setStatusFilter] = useState<UserStatus>('Semua');
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -47,7 +47,7 @@ export function useUserManagement() {
       }
 
       const matchStatus =
-        statusFilter === 'All' ? true : userStatus === statusFilter;
+        statusFilter === 'Semua' ? true : userStatus === statusFilter;
 
       return matchSearch && matchStatus;
     });

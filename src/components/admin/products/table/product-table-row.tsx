@@ -32,7 +32,11 @@ export function ProductTableRow({
         </span>
       </td>
       <td className="p-6 text-center">
-        <NutritionDisplay calories={produk.calories} protein={produk.protein} />
+        <NutritionDisplay
+          calories={produk.calories}
+          protein={produk.protein}
+          tags={produk.tags}
+        />
       </td>
       <td className="p-6 text-center">
         <p className="text-sm font-black text-[#1A1A1B] font-mono">

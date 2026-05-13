@@ -8,6 +8,7 @@ export type Produk = {
   stok: number;
   label_risiko: string;
   image: string;
+  tags: string[];
 };
 
 export type ProductFormData = {
@@ -19,4 +20,5 @@ export type ProductFormData = {
   stok: string;
   label_risiko: string;
   image: string;
+  tags: string[];
 };

@@ -2,7 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { UserStatus } from '@/types/admin/users';
-import { Filter, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface UserFilterBarProps {
   searchQuery: string;
@@ -17,7 +17,7 @@ export function UserFilterBar({
   statusFilter,
   onStatusFilterChange,
 }: UserFilterBarProps) {
-  const statuses: UserStatus[] = ['All', 'Aktif', 'Nonaktif', 'Banned'];
+  const statuses: UserStatus[] = ['Semua', 'Aktif', 'Nonaktif', 'Banned'];
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -34,21 +34,18 @@ export function UserFilterBar({
         />
       </div>
 
-      <div className="flex items-center gap-2 w-full sm:w-auto bg-white p-1.5 rounded-2xl shadow-sm overflow-x-auto">
-        <Filter className="w-4 h-4 text-gray-400 ml-2 hidden sm:block" />
-        {statuses.map((status) => (
-          <button
-            key={status}
-            onClick={() => onStatusFilterChange(status)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-              statusFilter === status
-                ? 'bg-black text-white'
-                : 'text-gray-500 hover:bg-gray-50'
-            }`}
-          >
-            {status}
-          </button>
-        ))}
+      <div className="flex items-center gap-3 w-full sm:w-auto">
+        <select
+          value={statusFilter}
+          onChange={(e) => onStatusFilterChange(e.target.value as UserStatus)}
+          className="px-4 py-2 bg-white border-none shadow-sm rounded-2xl text-sm font-black text-gray-700 focus:outline-none cursor-pointer h-12 min-w-[160px]"
+        >
+          {statuses.map((status) => (
+            <option key={status} value={status}>
+              Status: {status}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

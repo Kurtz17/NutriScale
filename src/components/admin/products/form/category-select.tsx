@@ -13,7 +13,7 @@ export function CategorySelect({ value, onChange }: CategorySelectProps) {
       onChange={onChange}
       className="w-full h-12 px-4 border border-gray-100 bg-gray-50/50 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#7CB342] focus:bg-white transition-all"
     >
-      <option value="">Select Category</option>
+      <option value="">Pilih Kategori</option>
       {KATEGORI_OPTIONS.map((k) => (
         <option key={k} value={k}>
           {k}

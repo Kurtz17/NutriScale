@@ -12,6 +12,7 @@ const emptyForm: ProductFormData = {
   stok: '',
   label_risiko: '',
   image: '',
+  tags: [],
 };
 
 type UseProductFormProps = {
@@ -43,6 +44,7 @@ export function useProductForm({
         stok: editData.stok?.toString() ?? '',
         label_risiko: editData.label_risiko ?? '',
         image: editData.image ?? '',
+        tags: editData.tags ?? [],
       });
     } else {
       setForm(emptyForm);
@@ -54,6 +56,19 @@ export function useProductForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleAddTag = (tag: string) => {
+    if (tag && !form.tags.includes(tag)) {
+      setForm((prev) => ({ ...prev, tags: [...prev.tags, tag] }));
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setForm((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((t) => t !== tagToRemove),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -86,6 +101,7 @@ export function useProductForm({
           nilaiGizi: {
             calories: Number(form.calories),
             protein: Number(form.protein),
+            tags: form.tags,
           },
         }),
       });
@@ -107,6 +123,8 @@ export function useProductForm({
     error,
     isEdit,
     handleChange,
+    handleAddTag,
+    handleRemoveTag,
     handleSubmit,
   };
 }

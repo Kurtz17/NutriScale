@@ -1,19 +1,45 @@
 type NutritionDisplayProps = {
   calories: number | null;
   protein: number | null;
+  tags?: string[];
 };
 
-export function NutritionDisplay({ calories, protein }: NutritionDisplayProps) {
+export function NutritionDisplay({
+  calories,
+  protein,
+  tags = [],
+}: NutritionDisplayProps) {
   return (
-    <div className="inline-block text-center space-y-1">
-      <p className="text-xs font-bold text-gray-700">
-        <span className="font-mono">{calories ?? 0}</span>{' '}
-        <span className="text-[10px] text-gray-400 uppercase">kkal</span>
-      </p>
-      <p className="text-[10px] font-bold text-[#7CB342] flex items-center justify-center gap-1">
-        <span className="font-mono">{protein ?? 0}</span>
-        <span className="uppercase">gr Protein</span>
-      </p>
+    <div className="flex flex-col items-center gap-2">
+      <div className="text-center">
+        <p className="text-xs font-black text-gray-900">
+          <span className="font-mono text-base">{calories ?? 0}</span>{' '}
+          <span className="text-[10px] text-gray-400 uppercase tracking-tighter">
+            kkal
+          </span>
+        </p>
+        <p className="text-[10px] font-black text-[#7CB342] uppercase tracking-tighter">
+          {protein ?? 0}g Protein
+        </p>
+      </div>
+
+      {tags.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-1 max-w-[150px]">
+          {tags.slice(0, 2).map((tag) => (
+            <span
+              key={tag}
+              className="px-2 py-0.5 bg-gray-50 text-[9px] font-black text-gray-500 rounded-md border border-gray-100 uppercase"
+            >
+              {tag}
+            </span>
+          ))}
+          {tags.length > 2 && (
+            <span className="text-[9px] font-black text-gray-400">
+              +{tags.length - 2}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

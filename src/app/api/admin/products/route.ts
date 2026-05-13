@@ -42,6 +42,14 @@ export async function POST(req: Request) {
         nilaiGizi: {
           calories: Number(nilaiGizi?.calories || 0),
           protein: Number(nilaiGizi?.protein || 0),
+          fat: Number(nilaiGizi?.fat || 0),
+          carbs: Number(nilaiGizi?.carbs || 0),
+          sugars: Number(nilaiGizi?.sugars || 0),
+          sodium: Number(nilaiGizi?.sodium || 0),
+          cholesterol: Number(nilaiGizi?.cholesterol || 0),
+          tags: nilaiGizi?.tags || [],
+          healthSafe: Boolean(nilaiGizi?.healthSafe),
+          aiRecommended: Boolean(nilaiGizi?.aiRecommended),
         },
       },
     });

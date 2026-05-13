@@ -20,29 +20,42 @@ export default function ProductFormModal({
   onSuccess,
   editData,
 }: ProductFormModalProps) {
-  const { form, isLoading, error, isEdit, handleChange, handleSubmit } =
-    useProductForm({ editData, isOpen, onClose, onSuccess });
+  const {
+    form,
+    isLoading,
+    error,
+    isEdit,
+    handleChange,
+    handleAddTag,
+    handleRemoveTag,
+    handleSubmit,
+  } = useProductForm({ editData, isOpen, onClose, onSuccess });
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       <div
-        className="absolute inset-0 bg-[#1A1A1B]/60 backdrop-blur-sm animate-in fade-in duration-300"
+        className="absolute inset-0 bg-[#1A1A1B]/40 backdrop-blur-md animate-in fade-in duration-300"
         onClick={onClose}
       />
       <div className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-300">
         <ModalHeader
-          title={isEdit ? 'Edit Product' : 'Add New Product'}
+          title={isEdit ? 'Edit Produk' : 'Tambah Produk Baru'}
           subtitle="Informasi Nutrisi & Inventaris"
           onClose={onClose}
         />
 
-        <div className="p-8 pb-0">
+        <div className="px-8 pt-6">
           <ErrorDisplay error={error} />
         </div>
 
-        <ProductFormFields form={form} onChange={handleChange} />
+        <ProductFormFields
+          form={form}
+          onChange={handleChange}
+          onAddTag={handleAddTag}
+          onRemoveTag={handleRemoveTag}
+        />
 
         <ProductFormActions
           onCancel={onClose}

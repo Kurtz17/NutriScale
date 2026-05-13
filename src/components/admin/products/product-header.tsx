@@ -9,7 +9,7 @@ export function ProductHeader({ onAdd }: ProductHeaderProps) {
     <div className="flex justify-between items-end">
       <div>
         <h2 className="text-4xl font-black text-[#1A1A1B] tracking-tighter">
-          Product Catalog
+          Katalog Produk
         </h2>
         <p className="text-gray-500 font-medium mt-2">
           Kelola stok dan informasi produk makanan NutriScale
