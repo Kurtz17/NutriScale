@@ -4,6 +4,8 @@ export interface AdminUser {
   email: string;
   role: string | null;
   banned: boolean | null;
+  banReason?: string | null;
+  banExpires?: string | null;
   createdAt: string;
   lastOnline: string | null;
 }
