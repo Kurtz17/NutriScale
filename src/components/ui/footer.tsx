@@ -17,8 +17,9 @@ export default function Footer() {
     '/reset-password',
     '/recovery',
   ].includes(pathname);
+  const isAdminRoute = pathname.startsWith('/admin');
 
-  if (isAdmin || isAuthPage) return null;
+  if (isAdmin || isAuthPage || isAdminRoute) return null;
 
   return (
     <footer className="bg-[#E1EEDD] text-black pb-10 rounded-t-[3rem] mt-20">

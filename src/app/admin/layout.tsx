@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
-  Settings,
+  ShoppingBag,
   UserCircle,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -41,9 +41,9 @@ export default function AdminLayout({
       path: '/admin/orders',
     },
     {
-      icon: <Settings size={20} />,
+      icon: <ShoppingBag size={20} />,
       label: 'Product Catalog',
-      path: '/admin/catalogues',
+      path: '/admin/products',
     },
   ];
 

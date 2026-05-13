@@ -46,8 +46,9 @@ export default function Navbar() {
       .catch(() => {});
   }, [isLoggedIn, fetchCart, isAdmin]);
 
-  // Jika admin atau di halaman auth, jangan tampilkan navbar
-  if (isAdmin || isAuthPage) return null;
+  // Jika admin, halaman auth, atau rute admin, jangan tampilkan navbar
+  const isAdminRoute = pathname.startsWith('/admin');
+  if (isAdmin || isAuthPage || isAdminRoute) return null;
 
   const handleLogout = async () => {
     await authClient.signOut();
