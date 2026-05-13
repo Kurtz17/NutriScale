@@ -1,18 +1,9 @@
 'use client';
 
-import ProductStatusBadge from './product-status-badge';
+import { type Produk } from '@/types/admin/product';
+import { Loader2 } from 'lucide-react';
 
-export type Produk = {
-  id: string;
-  name: string | null;
-  category: string | null;
-  price: number | null;
-  stok: number | null;
-  label_risiko: string | null;
-  calories: number | null;
-  protein: number | null;
-  image: string | null;
-};
+import { ProductTableRow } from './product-table-row';
 
 type ProductTableProps = {
   data: Produk[];
@@ -20,20 +11,6 @@ type ProductTableProps = {
   onEdit: (produk: Produk) => void;
   onDelete: (produk: Produk) => void;
 };
-
-function getKalori(calories: number | null): string {
-  if (!calories) return '-';
-  return `${calories} kkal`;
-}
-
-function formatHarga(price: number | null): string {
-  if (!price) return '-';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(price);
-}
 
 export default function ProductTable({
   data,
@@ -43,10 +20,12 @@ export default function ProductTable({
 }: ProductTableProps) {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-8 text-center text-gray-400">
-          <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-3" />
-          <p className="text-sm">Memuat data produk...</p>
+      <div className="bg-white rounded-[2rem] border border-white/50 overflow-hidden shadow-sm">
+        <div className="p-20 text-center text-gray-400">
+          <Loader2 className="animate-spin w-10 h-10 text-[#7CB342] mx-auto mb-4" />
+          <p className="font-bold text-sm uppercase tracking-widest animate-pulse">
+            Menyinkronkan database...
+          </p>
         </div>
       </div>
     );
@@ -54,11 +33,11 @@ export default function ProductTable({
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-12 text-center text-gray-400">
-          <p className="text-base font-medium">Produk tidak ditemukan</p>
-          <p className="text-sm mt-1">
-            Coba ubah filter atau kata kunci pencarian
+      <div className="bg-white rounded-[2rem] border border-white/50 overflow-hidden shadow-sm">
+        <div className="p-20 text-center text-gray-400">
+          <p className="text-lg font-black text-[#1A1A1B]">Produk Kosong</p>
+          <p className="text-sm mt-2 uppercase tracking-widest font-bold">
+            Tidak ada data yang sesuai dengan filter kamu.
           </p>
         </div>
       </div>
@@ -66,92 +45,56 @@ export default function ProductTable({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+    <div className="bg-white rounded-[2rem] border border-white/50 overflow-hidden shadow-sm">
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
-                Nama Produk
+            <tr className="border-b-2 border-gray-50">
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-left">
+                Produk
               </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
                 Kategori
               </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
-                Kalori
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
+                Nutrisi
               </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
                 Harga
               </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
                 Stok
               </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
-                Status
-              </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
                 Aksi
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-50">
             {data.map((produk) => (
-              <tr
+              <ProductTableRow
                 key={produk.id}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-4 py-3 font-medium text-gray-900">
-                  {produk.name ?? '-'}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {produk.category ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                      {produk.category}
-                    </span>
-                  ) : (
-                    '-'
-                  )}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {getKalori(produk.calories)}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {formatHarga(produk.price)}
-                </td>
-                <td className="px-4 py-3 text-gray-600">{produk.stok ?? 0}</td>
-                <td className="px-4 py-3">
-                  <ProductStatusBadge
-                    stok={produk.stok}
-                    labelRisiko={produk.label_risiko}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onEdit(produk)}
-                      className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDelete(produk)}
-                      className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                produk={produk}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Footer jumlah data */}
-      <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
-        <p className="text-xs text-gray-500">
-          Menampilkan <span className="font-medium">{data.length}</span> produk
+      {/* Footer Info */}
+      <div className="p-6 bg-gray-50/50 border-t border-gray-50 flex justify-between items-center">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          Total Database:{' '}
+          <span className="text-[#1A1A1B]">{data.length} Products</span>
         </p>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#7CB342] animate-pulse" />
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            Live Sync Active
+          </span>
+        </div>
       </div>
     </div>
   );

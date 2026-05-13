@@ -3,7 +3,7 @@ import { authClient } from '@/lib/auth-client';
 import { useCartStore } from '@/lib/store/useCartStore';
 import { LogOut, Package, ShoppingCart, User } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 interface UserProfile {
@@ -16,17 +16,26 @@ interface UserProfile {
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: session } = authClient.useSession();
   const isLoggedIn = !!session?.user;
+  const isAdmin = session?.user?.role === 'admin';
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { cart, fetchCart } = useCartStore();
 
+  const isAuthPage = [
+    '/login',
+    '/register',
+    '/reset-password',
+    '/recovery',
+  ].includes(pathname);
+
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || isAdmin) return;
     fetchCart();
     // Fetch fresh user data from DB (bypasses session cache)
     fetch('/api/user/me')
@@ -35,7 +44,11 @@ export default function Navbar() {
         if (data && !data.error) setUserProfile(data);
       })
       .catch(() => {});
-  }, [isLoggedIn, fetchCart]);
+  }, [isLoggedIn, fetchCart, isAdmin]);
+
+  // Jika admin, halaman auth, atau rute admin, jangan tampilkan navbar
+  const isAdminRoute = pathname.startsWith('/admin');
+  if (isAdmin || isAuthPage || isAdminRoute) return null;
 
   const handleLogout = async () => {
     await authClient.signOut();

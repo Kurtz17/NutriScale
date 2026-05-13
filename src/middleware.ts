@@ -29,18 +29,14 @@ export async function middleware(request: NextRequest) {
 
     if (isAdminRoute && sessionData.user.role !== 'admin') {
       if (request.nextUrl.pathname.startsWith('/api/')) {
-        return NextResponse.json(
-          { error: 'Forbidden: Admins only' },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: 'Not Found' }, { status: 404 });
       }
-      // Redirect non-admins trying to access admin pages to the dashboard or home
-      return NextResponse.redirect(new URL('/health-dashboard', request.url));
+
+      return NextResponse.rewrite(new URL('/404', request.url));
     }
 
     return NextResponse.next();
   } catch (error) {
-    // If there's an error fetching the session, default to redirecting to login
     if (request.nextUrl.pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

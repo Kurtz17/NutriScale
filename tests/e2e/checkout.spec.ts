@@ -2,6 +2,23 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Checkout Page', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/user/me', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'test-user-id',
+          name: 'John Doe',
+          email: 'test@example.com',
+          phone: '081234567890',
+          address: {
+            detailAlamat: 'Jl. Test',
+            jalan: 'No. 123',
+            kota: 'Jakarta',
+          },
+        }),
+      });
+    });
     await page.goto('/checkout');
   });
 
