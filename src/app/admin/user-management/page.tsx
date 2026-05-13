@@ -15,6 +15,7 @@ export default function UserManagementPage() {
     setSearchQuery,
     statusFilter,
     setStatusFilter,
+    refreshUsers,
   } = useUserManagement();
 
   // State untuk Modal Detail
@@ -59,6 +60,7 @@ export default function UserManagementPage() {
           user={selectedUser}
           isOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
+          onRefresh={refreshUsers}
         />
       </div>
     </div>

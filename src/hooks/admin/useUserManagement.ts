@@ -7,21 +7,22 @@ export function useUserManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<UserStatus>('All');
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('/api/admin/users');
-        const result = await response.json();
-        if (result.success) {
-          setUsers(result.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch users:', error);
-      } finally {
-        setIsLoading(false);
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/admin/users');
+      const result = await response.json();
+      if (result.success) {
+        setUsers(result.data);
       }
-    };
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -59,9 +60,6 @@ export function useUserManagement() {
     setSearchQuery,
     statusFilter,
     setStatusFilter,
-    refreshUsers: async () => {
-      setIsLoading(true);
-      // Fetch logic again if needed
-    },
+    refreshUsers: fetchUsers,
   };
 }
