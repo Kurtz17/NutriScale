@@ -12,28 +12,28 @@ interface UserTableProps {
 
 export function UserTable({ users, isLoading, onOpenDetail }: UserTableProps) {
   return (
-    <div className="bg-white rounded-[32px] p-2 sm:p-6 shadow-sm border border-gray-50 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[600px]">
+    <div className="bg-white rounded-[2rem] border border-white/50 overflow-hidden shadow-sm">
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b-2 border-gray-50">
-              <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                User Info
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
+                Info Pengguna
               </th>
-              <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
                 Role
               </th>
-              <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
                 Status
               </th>
-              <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                Join Date
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
+                Tgl Bergabung
               </th>
-              <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                Last Online
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
+                Terakhir Online
               </th>
-              <th className="p-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-right">
-                Action
+              <th className="p-6 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] text-center">
+                Aksi
               </th>
             </tr>
           </thead>

@@ -10,4 +10,4 @@ export interface AdminUser {
   lastOnline: string | null;
 }
 
-export type UserStatus = 'All' | 'Aktif' | 'Nonaktif' | 'Banned';
+export type UserStatus = 'Semua' | 'Aktif' | 'Nonaktif' | 'Banned';

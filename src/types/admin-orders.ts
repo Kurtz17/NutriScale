@@ -1,9 +1,9 @@
 export const ORDER_STATUS_OPTIONS = [
-  { value: 'TERTUNDA', label: 'Pending' },
-  { value: 'DIPROSES', label: 'Processing' },
-  { value: 'DIKIRIM', label: 'Shipped' },
-  { value: 'SELESAI', label: 'Completed' },
-  { value: 'DIBATALKAN', label: 'Cancelled' },
+  { value: 'TERTUNDA', label: 'Tertunda' },
+  { value: 'DIPROSES', label: 'Diproses' },
+  { value: 'DIKIRIM', label: 'Dikirim' },
+  { value: 'SELESAI', label: 'Selesai' },
+  { value: 'DIBATALKAN', label: 'Dibatalkan' },
 ] as const;
 
 export type AdminOrderStatus = (typeof ORDER_STATUS_OPTIONS)[number]['value'];
@@ -11,17 +11,17 @@ export type AdminOrderStatus = (typeof ORDER_STATUS_OPTIONS)[number]['value'];
 export type AdminOrderStatusFilter = AdminOrderStatus | 'ALL';
 
 export const ORDER_STATUS_LABELS: Record<AdminOrderStatus, string> = {
-  TERTUNDA: 'Pending',
-  DIPROSES: 'Processing',
-  DIKIRIM: 'Shipped',
-  SELESAI: 'Completed',
-  DIBATALKAN: 'Cancelled',
+  TERTUNDA: 'Tertunda',
+  DIPROSES: 'Diproses',
+  DIKIRIM: 'Dikirim',
+  SELESAI: 'Selesai',
+  DIBATALKAN: 'Dibatalkan',
 };
 
 export const PAYMENT_STATUS_LABELS = {
-  BERHASIL: 'Paid',
-  GAGAL: 'Failed',
-  TERTUNDA: 'Pending',
+  BERHASIL: 'Dibayar',
+  GAGAL: 'Gagal',
+  TERTUNDA: 'Tertunda',
 } as const;
 
 export type AdminPaymentStatus = keyof typeof PAYMENT_STATUS_LABELS;
