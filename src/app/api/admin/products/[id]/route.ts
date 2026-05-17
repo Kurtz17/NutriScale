@@ -53,6 +53,18 @@ export async function PATCH(
       },
     });
 
+    // Trigger AI Engine sync background task
+    try {
+      if (process.env.AI_ENGINE_URL && process.env.AI_ENGINE_API_KEY) {
+        fetch(`${process.env.AI_ENGINE_URL}/api/sync`, {
+          method: 'POST',
+          headers: { 'X-API-Key': process.env.AI_ENGINE_API_KEY },
+        }).catch((err) => console.error('Failed to trigger AI sync:', err));
+      }
+    } catch (e) {
+      console.error('Failed to execute AI sync logic', e);
+    }
+
     return NextResponse.json(product);
   } catch (error) {
     console.error('API_ADMIN_PRODUCTS_PATCH', error);
@@ -78,6 +90,18 @@ export async function DELETE(
     await prisma.produkMakanan.delete({
       where: { id },
     });
+
+    // Trigger AI Engine sync background task
+    try {
+      if (process.env.AI_ENGINE_URL && process.env.AI_ENGINE_API_KEY) {
+        fetch(`${process.env.AI_ENGINE_URL}/api/sync`, {
+          method: 'POST',
+          headers: { 'X-API-Key': process.env.AI_ENGINE_API_KEY },
+        }).catch((err) => console.error('Failed to trigger AI sync:', err));
+      }
+    } catch (e) {
+      console.error('Failed to execute AI sync logic', e);
+    }
 
     return NextResponse.json({ message: 'Product deleted' });
   } catch (error) {
