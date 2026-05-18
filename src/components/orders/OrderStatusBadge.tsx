@@ -10,6 +10,7 @@ export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
       case 'SELESAI':
         return 'bg-green-100 text-green-700';
       case 'DIBATALKAN':
+      case 'GAGAL':
         return 'bg-red-100 text-red-700';
       case 'TERTUNDA':
         return 'bg-yellow-100 text-yellow-700';
@@ -24,6 +25,8 @@ export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
         return '✓ Selesai';
       case 'DIBATALKAN':
         return '✕ Dibatalkan';
+      case 'GAGAL':
+        return '✕ Gagal/Expired';
       case 'DIKIRIM':
         return '● Sedang Dikirim';
       case 'DIPROSES':

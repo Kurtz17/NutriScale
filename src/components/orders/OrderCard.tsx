@@ -26,7 +26,7 @@ export function OrderCard({ order, onRefresh }: OrderCardProps) {
                 className={`p-3 rounded-2xl ${
                   order.status === 'SELESAI'
                     ? 'bg-green-100'
-                    : order.status === 'DIBATALKAN'
+                    : order.status === 'DIBATALKAN' || order.status === 'GAGAL'
                       ? 'bg-red-100'
                       : order.status === 'TERTUNDA'
                         ? 'bg-yellow-100'
@@ -37,7 +37,8 @@ export function OrderCard({ order, onRefresh }: OrderCardProps) {
                   className={`w-6 h-6 ${
                     order.status === 'SELESAI'
                       ? 'text-green-600'
-                      : order.status === 'DIBATALKAN'
+                      : order.status === 'DIBATALKAN' ||
+                          order.status === 'GAGAL'
                         ? 'text-red-600'
                         : order.status === 'TERTUNDA'
                           ? 'text-yellow-600'
