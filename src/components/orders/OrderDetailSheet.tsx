@@ -50,7 +50,8 @@ export function OrderDetailSheet({ order, onRefresh }: OrderDetailSheetProps) {
                     order.status === 'SELESAI'
                       ? 'bg-green-500 ring-green-50'
                       : order.status === 'DIBATALKAN' ||
-                          order.status === 'GAGAL'
+                          order.status === 'GAGAL' ||
+                          order.status === 'KADALUWARSA'
                         ? 'bg-red-500 ring-red-50'
                         : order.status === 'TERTUNDA'
                           ? 'bg-yellow-400 ring-yellow-50'
@@ -66,12 +67,14 @@ export function OrderDetailSheet({ order, onRefresh }: OrderDetailSheetProps) {
                     : order.status === 'DIBATALKAN'
                       ? 'Pesanan Dibatalkan'
                       : order.status === 'GAGAL'
-                        ? 'Pembayaran Gagal/Expired'
-                        : order.status === 'DIKIRIM'
-                          ? 'Pesanan Sedang Dikirim'
-                          : order.status === 'DIPROSES'
-                            ? 'Pesanan Sedang Disiapkan'
-                            : 'Menunggu Pembayaran'}
+                        ? 'Pembayaran Gagal'
+                        : order.status === 'KADALUWARSA'
+                          ? 'Pembayaran Kadaluwarsa'
+                          : order.status === 'DIKIRIM'
+                            ? 'Pesanan Sedang Dikirim'
+                            : order.status === 'DIPROSES'
+                              ? 'Pesanan Sedang Disiapkan'
+                              : 'Menunggu Pembayaran'}
                 </p>
                 <p className="text-xs text-gray-500 font-medium">
                   {order.status === 'SELESAI'
@@ -79,8 +82,10 @@ export function OrderDetailSheet({ order, onRefresh }: OrderDetailSheetProps) {
                     : order.status === 'DIBATALKAN'
                       ? 'Pesanan telah dibatalkan.'
                       : order.status === 'GAGAL'
-                        ? 'Waktu pembayaran telah habis.'
-                        : 'Kurir akan segera memperbarui status pengiriman.'}
+                        ? 'Terjadi kesalahan pada pembayaran.'
+                        : order.status === 'KADALUWARSA'
+                          ? 'Waktu pembayaran telah habis.'
+                          : 'Kurir akan segera memperbarui status pengiriman.'}
                 </p>
               </div>
             </div>

@@ -69,8 +69,10 @@ export async function GET() {
         totalPrice: Number(pesanan.totalHarga),
         totalCalories,
         status:
-          pesanan.transaksiPembayaran?.statusPembayaran === 'GAGAL'
-            ? 'GAGAL'
+          pesanan.transaksiPembayaran?.statusPembayaran === 'GAGAL' ||
+          pesanan.transaksiPembayaran?.statusPembayaran === 'DIBATALKAN' ||
+          pesanan.transaksiPembayaran?.statusPembayaran === 'KADALUWARSA'
+            ? pesanan.transaksiPembayaran.statusPembayaran
             : pesanan.statusPesanan,
         snapToken: pesanan.transaksiPembayaran?.metodePembayaran || null,
         items,

@@ -22,6 +22,8 @@ export const PAYMENT_STATUS_LABELS = {
   BERHASIL: 'Dibayar',
   GAGAL: 'Gagal',
   TERTUNDA: 'Tertunda',
+  DIBATALKAN: 'Dibatalkan',
+  KADALUWARSA: 'Kedaluwarsa',
 } as const;
 
 export type AdminPaymentStatus = keyof typeof PAYMENT_STATUS_LABELS;

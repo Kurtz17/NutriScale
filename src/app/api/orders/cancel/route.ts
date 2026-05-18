@@ -1,4 +1,5 @@
 import { auth } from '@/lib/auth';
+import { cancelMidtransTransaction } from '@/lib/midtrans';
 import prisma from '@/lib/prisma';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -39,15 +40,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if within 1 hour
+    // Check if within 15 minutes
     const now = new Date();
     const createdAt = new Date(pesanan.createdAt);
     const diffMs = now.getTime() - createdAt.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
+    const diffMinutes = diffMs / (1000 * 60);
 
-    if (diffHours > 1) {
+    if (diffMinutes > 15) {
       return NextResponse.json(
-        { error: 'Order can only be cancelled within 1 hour' },
+        { error: 'Order can only be cancelled within 15 minutes' },
         { status: 400 },
       );
     }
@@ -56,6 +57,20 @@ export async function POST(req: Request) {
       where: { id: orderId },
       data: { statusPesanan: 'DIBATALKAN' },
     });
+
+    await prisma.transaksiPembayaran.updateMany({
+      where: { pesananId: orderId },
+      data: { statusPembayaran: 'DIBATALKAN' },
+    });
+
+    try {
+      await cancelMidtransTransaction(orderId);
+    } catch (err) {
+      console.error(
+        'Peringatan: Gagal membatalkan di Midtrans. Mungkin transaksi belum dibuat di sisi Midtrans (user belum memilih metode pembayaran), sudah kedaluwarsa, atau sudah dibayar.',
+        err,
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -46,9 +46,34 @@ export default function Navbar() {
       .catch(() => {});
   }, [isLoggedIn, fetchCart, isAdmin]);
 
-  // Jika admin, halaman auth, atau rute admin, jangan tampilkan navbar
+  // Daftar rute utama yang valid di aplikasimu
+  const validRoutes = [
+    '/',
+    '/login',
+    '/register',
+    '/reset-password',
+    '/recovery',
+    '/marketplace',
+    '/health-dashboard',
+    '/order-history',
+    '/profile',
+    '/checkout',
+    '/cart',
+    '/health-assessment',
+  ];
+
+  const isKnownRoute =
+    pathname === '/' ||
+    pathname.startsWith('/admin') ||
+    validRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + '/'),
+    );
+
+  const isPageNotFound = !isKnownRoute;
+
+  // Jika admin, halaman auth, rute admin, atau halaman tidak ditemukan (404), jangan tampilkan navbar
   const isAdminRoute = pathname.startsWith('/admin');
-  if (isAdmin || isAuthPage || isAdminRoute) return null;
+  if (isAdmin || isAuthPage || isAdminRoute || isPageNotFound) return null;
 
   const handleLogout = async () => {
     await authClient.signOut();

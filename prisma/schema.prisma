@@ -104,6 +104,8 @@ enum StatusPembayaran {
   BERHASIL
   GAGAL
   TERTUNDA
+  DIBATALKAN
+  KADALUWARSA
 }
 
 enum JenisKelamin {

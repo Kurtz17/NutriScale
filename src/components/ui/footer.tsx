@@ -17,9 +17,33 @@ export default function Footer() {
     '/reset-password',
     '/recovery',
   ].includes(pathname);
+  // Daftar rute utama yang valid di aplikasimu
+  const validRoutes = [
+    '/',
+    '/login',
+    '/register',
+    '/reset-password',
+    '/recovery',
+    '/marketplace',
+    '/health-dashboard',
+    '/order-history',
+    '/profile',
+    '/checkout',
+    '/cart',
+    '/health-assessment',
+  ];
+
+  const isKnownRoute =
+    pathname === '/' ||
+    pathname.startsWith('/admin') ||
+    validRoutes.some(
+      (route) => pathname === route || pathname.startsWith(route + '/'),
+    );
+
+  const isPageNotFound = !isKnownRoute;
   const isAdminRoute = pathname.startsWith('/admin');
 
-  if (isAdmin || isAuthPage || isAdminRoute) return null;
+  if (isAdmin || isAuthPage || isPageNotFound || isAdminRoute) return null;
 
   return (
     <footer className="bg-[#E1EEDD] text-black pb-10 rounded-t-[3rem] mt-20">
