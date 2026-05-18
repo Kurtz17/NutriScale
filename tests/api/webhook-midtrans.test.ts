@@ -85,7 +85,7 @@ describe('API Midtrans Webhook', () => {
     expect(prisma.cartItem.deleteMany).toHaveBeenCalled();
   });
 
-  it('should update status to GAGAL if transaction is cancelled/expired', async () => {
+  it('should update status to KADALUWARSA if transaction is expired', async () => {
     vi.mocked(verifySignatureKey).mockResolvedValue(true);
 
     const failPayload = { ...mockPayload, transaction_status: 'expire' };
@@ -100,7 +100,27 @@ describe('API Midtrans Webhook', () => {
 
     expect(prisma.transaksiPembayaran.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ statusPembayaran: 'GAGAL' }),
+        data: expect.objectContaining({ statusPembayaran: 'KADALUWARSA' }),
+      }),
+    );
+  });
+
+  it('should update status to DIBATALKAN if transaction is cancelled/denied', async () => {
+    vi.mocked(verifySignatureKey).mockResolvedValue(true);
+
+    const failPayload = { ...mockPayload, transaction_status: 'cancel' };
+
+    const req = new Request('http://localhost/api/webhooks/midtrans', {
+      method: 'POST',
+      body: JSON.stringify(failPayload),
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+
+    expect(prisma.transaksiPembayaran.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ statusPembayaran: 'DIBATALKAN' }),
       }),
     );
   });
