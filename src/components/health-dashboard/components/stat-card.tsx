@@ -18,6 +18,7 @@ export default function StatCard({ stat }: StatCardProps) {
   const getIcon = () => {
     switch (stat.title) {
       case 'WHO Z-Score (HAZ)':
+      case 'Body Mass Index (BMI)':
         return <Activity className="w-5 h-5 text-gray-500" />;
       case 'Daily Calories':
         return <Flame className="w-5 h-5 text-gray-500" />;
@@ -62,12 +63,22 @@ export default function StatCard({ stat }: StatCardProps) {
           </div>
         )}
 
-        {/* STATUS BADGE (WHO) */}
-        {stat.status && stat.title === 'WHO Z-Score (HAZ)' && (
-          <span className="inline-block mt-3 px-3 py-1 text-xs rounded-full bg-green-100 text-green-600 font-medium">
-            {stat.status}
-          </span>
-        )}
+        {/* STATUS BADGE */}
+        {stat.status &&
+          (stat.title === 'WHO Z-Score (HAZ)' ||
+            stat.title === 'Body Mass Index (BMI)') && (
+            <span
+              className={`inline-block mt-3 px-3 py-1 text-xs rounded-full font-medium ${
+                stat.status.toLowerCase() === 'normal'
+                  ? 'bg-green-100 text-green-600'
+                  : stat.status.toLowerCase().includes('under')
+                    ? 'bg-yellow-100 text-yellow-600'
+                    : 'bg-red-100 text-red-600'
+              }`}
+            >
+              {stat.status}
+            </span>
+          )}
 
         {/* HEALTH STATUS TEXT */}
         {stat.title === 'Health Status' && (

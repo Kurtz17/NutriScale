@@ -28,7 +28,7 @@ export async function GET() {
 
     // Default stats
     let stats: Stat[] = [
-      { title: 'WHO Z-Score (HAZ)', value: '+0.0 SD', status: 'Normal' },
+      { title: 'Body Mass Index (BMI)', value: '0.0', status: 'Normal' },
       { title: 'Daily Calories', value: `0 / 0`, progress: 0 },
       { title: 'Protein Intake', value: `0 / 0g`, progress: 0 },
       { title: 'Health Status', value: 'No Data Yet' },
@@ -129,12 +129,20 @@ export async function GET() {
         }
       });
 
+      const isAdult = profile.umur && profile.umur > 18;
+
       stats = [
-        {
-          title: 'WHO Z-Score (HAZ)',
-          value: `${Number(latest.haz) > 0 ? '+' : ''}${latest.haz} SD`,
-          status: latest.statusNutrisi,
-        },
+        isAdult
+          ? {
+              title: 'Body Mass Index (BMI)',
+              value: `${Number(latest.bmi).toFixed(1)}`,
+              status: latest.statusNutrisi,
+            }
+          : {
+              title: 'WHO Z-Score (HAZ)',
+              value: `${Number(latest.haz) > 0 ? '+' : ''}${latest.haz} SD`,
+              status: latest.statusNutrisi,
+            },
         {
           title: 'Daily Calories',
           value: `${Math.round(currentCalorieIntake)} / ${Math.round(targetCalories)}`,
