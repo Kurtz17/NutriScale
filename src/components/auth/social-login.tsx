@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 
 interface SocialLoginProps {
-  handleSocialLogin: (provider: 'google' | 'apple') => void;
+  handleSocialLogin: (provider: 'google') => void;
 }
 
 export default function SocialLogin({ handleSocialLogin }: SocialLoginProps) {
@@ -41,17 +41,6 @@ export default function SocialLogin({ handleSocialLogin }: SocialLoginProps) {
             />
           </svg>
           Google
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="flex-1 rounded-xl py-6 border-gray-200 opacity-50 cursor-not-allowed font-bold text-gray-700"
-          disabled
-        >
-          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.11.78.9-.04 2.1-.83 3.52-.76 1.76.08 3.09.73 3.84 1.83-3.69 2.18-3.12 7.21.57 9.12-.66 1.66-1.53 3.32-3.04 5zm-3.14-13.82c-.04-1.92 1.58-3.62 3.44-3.7.15 2.1-1.89 3.96-3.44 3.7z" />
-          </svg>
-          Apple
         </Button>
       </div>
     </>
