@@ -49,7 +49,9 @@ export function OrderDetailSheet({ order, onRefresh }: OrderDetailSheetProps) {
                   className={`w-3 h-3 rounded-full ring-4 ${
                     order.status === 'SELESAI'
                       ? 'bg-green-500 ring-green-50'
-                      : order.status === 'DIBATALKAN'
+                      : order.status === 'DIBATALKAN' ||
+                          order.status === 'GAGAL' ||
+                          order.status === 'KADALUWARSA'
                         ? 'bg-red-500 ring-red-50'
                         : order.status === 'TERTUNDA'
                           ? 'bg-yellow-400 ring-yellow-50'
@@ -64,18 +66,26 @@ export function OrderDetailSheet({ order, onRefresh }: OrderDetailSheetProps) {
                     ? 'Pesanan Sudah Sampai'
                     : order.status === 'DIBATALKAN'
                       ? 'Pesanan Dibatalkan'
-                      : order.status === 'DIKIRIM'
-                        ? 'Pesanan Sedang Dikirim'
-                        : order.status === 'DIPROSES'
-                          ? 'Pesanan Sedang Disiapkan'
-                          : 'Menunggu Pembayaran'}
+                      : order.status === 'GAGAL'
+                        ? 'Pembayaran Gagal'
+                        : order.status === 'KADALUWARSA'
+                          ? 'Pembayaran Kadaluwarsa'
+                          : order.status === 'DIKIRIM'
+                            ? 'Pesanan Sedang Dikirim'
+                            : order.status === 'DIPROSES'
+                              ? 'Pesanan Sedang Disiapkan'
+                              : 'Menunggu Pembayaran'}
                 </p>
                 <p className="text-xs text-gray-500 font-medium">
                   {order.status === 'SELESAI'
                     ? 'Pesanan telah diterima dengan baik.'
                     : order.status === 'DIBATALKAN'
                       ? 'Pesanan telah dibatalkan.'
-                      : 'Kurir akan segera memperbarui status pengiriman.'}
+                      : order.status === 'GAGAL'
+                        ? 'Terjadi kesalahan pada pembayaran.'
+                        : order.status === 'KADALUWARSA'
+                          ? 'Waktu pembayaran telah habis.'
+                          : 'Kurir akan segera memperbarui status pengiriman.'}
                 </p>
               </div>
             </div>

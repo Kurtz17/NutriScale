@@ -36,6 +36,7 @@ model User {
   phone        String?
   address      Json?
   notification Boolean?  @default(true)
+  lastOnline   DateTime?
 
   @@unique([email])
   @@map("user")
@@ -103,6 +104,8 @@ enum StatusPembayaran {
   BERHASIL
   GAGAL
   TERTUNDA
+  DIBATALKAN
+  KADALUWARSA
 }
 
 enum JenisKelamin {

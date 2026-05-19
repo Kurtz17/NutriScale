@@ -84,7 +84,10 @@ export async function GET() {
         label_risiko: p.labelRisiko || '',
         badges: {
           healthSafe: Boolean(gizi.healthSafe),
-          aiRecommended: isAiRecommended || Boolean(gizi.aiRecommended), // fallback ke seed jika tidak login
+          aiRecommended:
+            recommendedProductIds.size > 0
+              ? isAiRecommended
+              : Boolean(gizi.aiRecommended),
         },
         tags: (gizi.tags as string[]) || [],
         calories: Number(gizi.calories) || 0,

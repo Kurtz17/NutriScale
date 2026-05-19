@@ -72,15 +72,39 @@ export async function POST(req: Request) {
       }
     } else if (
       transaction_status === 'cancel' ||
-      transaction_status === 'deny' ||
-      transaction_status === 'expire'
+      transaction_status === 'deny'
     ) {
-      // Update TransaksiPembayaran status to GAGAL
+      // Update TransaksiPembayaran status to DIBATALKAN
       await prisma.transaksiPembayaran.update({
         where: { pesananId: order_id },
         data: {
-          statusPembayaran: 'GAGAL',
+          statusPembayaran: 'DIBATALKAN',
           metodePembayaran: payment_type,
+        },
+      });
+
+      // Update Pesanan status to DIBATALKAN
+      await prisma.pesanan.update({
+        where: { id: order_id },
+        data: {
+          statusPesanan: 'DIBATALKAN',
+        },
+      });
+    } else if (transaction_status === 'expire') {
+      // Update TransaksiPembayaran status to KADALUWARSA
+      await prisma.transaksiPembayaran.update({
+        where: { pesananId: order_id },
+        data: {
+          statusPembayaran: 'KADALUWARSA',
+          metodePembayaran: payment_type,
+        },
+      });
+
+      // Update Pesanan status to DIBATALKAN
+      await prisma.pesanan.update({
+        where: { id: order_id },
+        data: {
+          statusPesanan: 'DIBATALKAN',
         },
       });
     }

@@ -13,17 +13,33 @@ export async function middleware(request: NextRequest) {
       },
     );
 
-    const session = await response.json();
+    const sessionData = await response.json();
 
-    if (!session) {
+    if (!sessionData || !sessionData.user) {
+      if (request.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
       return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Role-based authorization for Admin routes
+    const isAdminRoute =
+      request.nextUrl.pathname.startsWith('/admin') ||
+      request.nextUrl.pathname.startsWith('/api/admin');
+
+    if (isAdminRoute && sessionData.user.role !== 'admin') {
+      if (request.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+      }
+
+      return NextResponse.rewrite(new URL('/404', request.url));
     }
 
     return NextResponse.next();
   } catch (error) {
-    // If there's an error fetching the session, default to redirecting to login
-    // just to be safe, or we can let it pass and let client side handle it.
-    // For strict protection, we redirect.
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.redirect(new URL('/login', request.url));
   }
 }
@@ -38,5 +54,7 @@ export const config = {
     '/smart-counter/:path*',
     '/checkout/:path*',
     '/order-history/:path*',
+    '/admin/:path*',
+    '/api/admin/:path*',
   ],
 };

@@ -13,9 +13,7 @@ test.describe('Authentication - Login Page', () => {
     ).toBeVisible();
     await expect(page.getByLabel(/Email Address/i)).toBeVisible();
     await expect(page.getByLabel(/^Password$/i)).toBeVisible();
-    await expect(
-      page.getByRole('main').getByRole('button', { name: /Sign In/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /Sign In/i })).toBeVisible();
     await expect(
       page.getByRole('link', { name: /Forgot Password/i }),
     ).toBeVisible();
@@ -28,10 +26,7 @@ test.describe('Authentication - Login Page', () => {
     await page
       .locator('form')
       .evaluate((form) => form.setAttribute('novalidate', ''));
-    await page
-      .getByRole('main')
-      .getByRole('button', { name: /Sign In/i })
-      .click();
+    await page.getByRole('button', { name: /Sign In/i }).click();
     const errorMsg = page.locator('text=Mohon isi email dan password.');
     await expect(errorMsg).toBeVisible();
   });
@@ -41,10 +36,7 @@ test.describe('Authentication - Login Page', () => {
       .getByPlaceholder('your.email@example.com')
       .fill('salah@email.com');
     await page.getByPlaceholder('••••••••').fill('passwordsalah123');
-    await page
-      .getByRole('main')
-      .getByRole('button', { name: /Sign In/i })
-      .click();
+    await page.getByRole('button', { name: /Sign In/i }).click();
 
     // Menunggu respons API dan error muncul
     const errorMsg = page.locator('.text-red-500');
@@ -70,10 +62,7 @@ test.describe('Authentication - Login Page', () => {
       .getByPlaceholder('your.email@example.com')
       .fill('test@example.com');
     await page.getByPlaceholder('••••••••').fill('somepassword');
-    await page
-      .getByRole('main')
-      .getByRole('button', { name: /Sign In/i })
-      .click();
+    await page.getByRole('button', { name: /Sign In/i }).click();
 
     const loadingBtn = page.getByRole('button', { name: /Masuk\.\.\./i });
     const isLoading = await loadingBtn.isVisible().catch(() => false);
@@ -109,8 +98,8 @@ test.describe('Authentication - Register Page', () => {
     await page
       .locator('form')
       .evaluate((form) => form.setAttribute('novalidate', ''));
-    await page.getByRole('button', { name: /Sign Up/i }).click();
-    await expect(page.locator('text=Mohon isi semua data akun.')).toBeVisible();
+    await page.locator('form button[type="submit"]').click();
+    await expect(page.getByText('Mohon isi semua data akun.')).toBeVisible();
   });
 
   test('harus menampilkan error jika password dan konfirmasi tidak cocok', async ({
@@ -124,9 +113,9 @@ test.describe('Authentication - Register Page', () => {
     const passwordFields = page.getByPlaceholder('••••••••');
     await passwordFields.nth(0).fill('password123');
     await passwordFields.nth(1).fill('password456');
-    await page.getByRole('button', { name: /Sign Up/i }).click();
+    await page.locator('form button[type="submit"]').click();
     await expect(
-      page.locator('text=Password dan Konfirmasi Password tidak cocok!'),
+      page.getByText('Password dan Konfirmasi Password tidak cocok!'),
     ).toBeVisible();
   });
 

@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import prisma from '../src/lib/prisma';
 
 async function main() {
@@ -779,9 +781,44 @@ async function main() {
     });
   }
 
-  // To seed a user and health data we need to make sure we don't break existing users,
-  // but if we need dummy data for testing we can create one or assume the user exists.
-  // We will leave the health data dynamic per user for the API later.
+  console.log('Seeding Admin account...');
+  try {
+    const { auth } = await import('../src/lib/auth');
+
+    // Check if admin already exists
+    const existingAdmin = await prisma.user.findUnique({
+      where: { email: 'admin@nutriscale.com' },
+    });
+
+    if (!existingAdmin) {
+      const res = await auth.api.signUpEmail({
+        body: {
+          email: 'admin@nutriscale.com',
+          password: 'adminpassword123',
+          name: 'Super Admin',
+        },
+      });
+
+      if (res?.user?.id) {
+        await prisma.user.update({
+          where: { id: res.user.id },
+          data: {
+            role: 'admin',
+            emailVerified: true,
+          },
+        });
+        console.log(
+          'Admin account created successfully. (admin@nutriscale.com / adminpassword123)',
+        );
+      } else {
+        console.log('Failed to create admin account via auth API.');
+      }
+    } else {
+      console.log('Admin account already exists.');
+    }
+  } catch (error) {
+    console.error('Error seeding admin account:', error);
+  }
 
   console.log('Seed completed.');
 }

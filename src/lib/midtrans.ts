@@ -11,6 +11,18 @@ const midtrans_snap = new midtransClient.Snap({
   clientKey: process.env.MIDTRANS_CLIENT_KEY ?? '',
 });
 
+interface MidtransCoreApi {
+  transaction: {
+    cancel(orderId: string): Promise<Record<string, unknown>>;
+  };
+}
+
+const midtrans_core = new midtransClient.CoreApi({
+  isProduction: false,
+  serverKey: process.env.MIDTRANS_SERVER_KEY ?? '',
+  clientKey: process.env.MIDTRANS_CLIENT_KEY ?? '',
+}) as unknown as MidtransCoreApi;
+
 function createParameter(
   order_id: string,
   gross_amount: number,
@@ -20,7 +32,11 @@ function createParameter(
       order_id,
       gross_amount,
     },
-  };
+    expiry: {
+      unit: 'minute',
+      duration: 15,
+    },
+  } as unknown as SnapTransactionParameters;
 }
 
 export async function createMidtransTransaction(
@@ -60,4 +76,20 @@ export async function verifySignatureKey(
     .join('');
 
   return expectedSignature === signatureKey;
+}
+
+/**
+ * Cancels a pending transaction in Midtrans.
+ * @param orderId The order ID to cancel.
+ */
+export async function cancelMidtransTransaction(
+  orderId: string,
+): Promise<unknown> {
+  try {
+    const response = await midtrans_core.transaction.cancel(orderId);
+    return response;
+  } catch (error) {
+    console.error(`Failed to cancel Midtrans transaction ${orderId}:`, error);
+    throw error;
+  }
 }
