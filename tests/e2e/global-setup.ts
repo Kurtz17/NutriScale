@@ -1,27 +1,93 @@
 import { chromium } from '@playwright/test';
+import fs from 'fs';
 import path from 'path';
 
-const TEST_EMAIL = process.env.TEST_EMAIL || 'muhammadzahran1777@gmail.com';
-const TEST_PASSWORD = process.env.TEST_PASSWORD || '12345678';
-export const AUTH_STATE_FILE = path.join(__dirname, '.auth', 'user.json');
+const BASE_URL = (
+  process.env.PLAYWRIGHT_BASE_URL ||
+  process.env.BETTER_AUTH_URL ||
+  'http://localhost:3000'
+).replace(/\/$/, '');
+const TEST_EMAIL = process.env.TEST_EMAIL;
+const TEST_PASSWORD = process.env.TEST_PASSWORD;
+const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'admin@nutriscale.com';
+const TEST_ADMIN_PASSWORD =
+  process.env.TEST_ADMIN_PASSWORD || 'adminpassword123';
+export const USER_AUTH_STATE_FILE = path.join(__dirname, '.auth', 'user.json');
+export const ADMIN_AUTH_STATE_FILE = path.join(
+  __dirname,
+  '.auth',
+  'admin.json',
+);
+
+type LoginStateOptions = {
+  email: string;
+  password: string;
+  stateFile: string;
+  expectedPath: string;
+  label: string;
+};
+
+async function loginAndSaveState({
+  email,
+  password,
+  stateFile,
+  expectedPath,
+  label,
+}: LoginStateOptions) {
+  const browser = await chromium.launch();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  try {
+    await page.goto(`${BASE_URL}/login`);
+
+    await page.getByLabel('Email Address').fill(email);
+    await page.getByLabel('Password').fill(password);
+    await page
+      .locator('main')
+      .getByRole('button', { name: /Sign In/i })
+      .click();
+
+    await page.waitForURL(
+      (url) => url.origin === BASE_URL && url.pathname === expectedPath,
+      { timeout: 15000 },
+    );
+
+    await context.storageState({ path: stateFile });
+  } catch (error) {
+    throw new Error(
+      `Failed to create ${label} E2E storageState. Check the ${label} credentials and seeded database. Original error: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+}
 
 export default async function globalSetup() {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
+  fs.mkdirSync(path.dirname(USER_AUTH_STATE_FILE), { recursive: true });
 
-  await page.goto('http://localhost:3000/login');
+  if (!TEST_EMAIL || !TEST_PASSWORD) {
+    throw new Error(
+      'TEST_EMAIL and TEST_PASSWORD must be set in .env, .env.local, or .env.test for authenticated E2E tests.',
+    );
+  }
 
-  await page.getByLabel('Email Address').fill(TEST_EMAIL);
-  await page.getByLabel('Password').fill(TEST_PASSWORD);
-  await page
-    .locator('main')
-    .getByRole('button', { name: /Sign In/i })
-    .click();
+  await loginAndSaveState({
+    email: TEST_EMAIL,
+    password: TEST_PASSWORD,
+    stateFile: USER_AUTH_STATE_FILE,
+    expectedPath: '/',
+    label: 'user',
+  });
 
-  // Tunggu redirect ke homepage setelah login berhasil
-  await page.waitForURL('http://localhost:3000/', { timeout: 15000 });
-
-  // Simpan cookies/session ke file
-  await page.context().storageState({ path: AUTH_STATE_FILE });
-  await browser.close();
+  await loginAndSaveState({
+    email: TEST_ADMIN_EMAIL,
+    password: TEST_ADMIN_PASSWORD,
+    stateFile: ADMIN_AUTH_STATE_FILE,
+    expectedPath: '/admin/dashboard',
+    label: 'admin',
+  });
 }
