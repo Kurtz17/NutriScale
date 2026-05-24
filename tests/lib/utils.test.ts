@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn, formatHarga } from '@/lib/utils';
 import { describe, expect, it } from 'vitest';
 
 describe('Utils: cn function', () => {
@@ -26,5 +26,17 @@ describe('Utils: cn function', () => {
   it('should ignore undefined or null values', () => {
     const result = cn('btn', null, undefined, 'btn-primary');
     expect(result).toBe('btn btn-primary');
+  });
+});
+
+describe('Utils: formatHarga', () => {
+  it('should format positive IDR values without decimal fractions', () => {
+    expect(formatHarga(125000)).toBe('Rp\u00a0125.000');
+  });
+
+  it('should format zero, null, and undefined as Rp 0', () => {
+    expect(formatHarga(0)).toBe('Rp\u00a00');
+    expect(formatHarga(null)).toBe('Rp 0');
+    expect(formatHarga(undefined)).toBe('Rp 0');
   });
 });

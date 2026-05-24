@@ -2,6 +2,33 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Authentication - Login Page', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/auth/**', async (route) => {
+      const url = route.request().url();
+
+      if (url.includes('get-session')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(null),
+        });
+        return;
+      }
+
+      if (url.includes('sign-in')) {
+        await route.fulfill({
+          status: 401,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Email atau password salah.' }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true }),
+      });
+    });
     await page.goto('/login');
   });
 
@@ -76,6 +103,24 @@ test.describe('Authentication - Login Page', () => {
 
 test.describe('Authentication - Register Page', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/auth/**', async (route) => {
+      const url = route.request().url();
+
+      if (url.includes('get-session')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(null),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true }),
+      });
+    });
     await page.goto('/register');
   });
 

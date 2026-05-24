@@ -1,3 +1,10 @@
-# NutriScale - A Smart Solution for Managing Nutrition and Health 
+# NutriScale
 
-An interactive web-based health application built with a client-server architecture that integrates personal nutritional analysis with a curated healthy food marketplace. We provide a platform capable of analyzing a user's nutritional status based on basic anthropometric data to help prevent malnutrition and support Sustainable Development Goals (SDGs) Goal 2: Zero Hunger. Through an AI Recommendation Engine, users receive personalized daily meal prep plans and can directly purchase healthy catering packages or raw ingredients that have been medically screened to support a sustainable healthy lifestyle.
+NutriScale is a smart nutrition and health management platform built with
+Next.js. It combines personal health assessment, AI-assisted nutrition
+recommendations, a healthy food marketplace, checkout/payment flow, order
+history, and an admin dashboard for managing products, users, and orders.
+
+The project was designed as an interactive web application to support better
+nutrition decisions across several user profiles, including general users,
+children under five, pregnant women, and post-operation patients.

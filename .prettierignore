@@ -31,3 +31,12 @@ pnpm-lock.yaml
 
 # Prisma generated
 generated/
+src/app/generated/prisma/
+
+# Test and coverage artifacts
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.auth/
+tests/e2e/.auth/
