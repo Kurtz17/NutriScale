@@ -2,6 +2,13 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Order History Page', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/orders', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ orders: [] }),
+      });
+    });
     await page.goto('/order-history');
   });
 
@@ -20,14 +27,10 @@ test.describe('Order History Page', () => {
     await expect(
       page.locator('text=Memuat riwayat pesanan...'),
     ).not.toBeVisible({ timeout: 8000 });
-    const emptyState = page.getByText('Belum Ada Pesanan');
-    const hasPesanan = await emptyState.isVisible().catch(() => false);
-    if (hasPesanan) {
-      await expect(emptyState).toBeVisible();
-      await expect(
-        page.getByRole('link', { name: /Mulai Belanja/i }),
-      ).toBeVisible();
-    }
+    await expect(page.getByText('Belum Ada Pesanan')).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: /Mulai Belanja/i }),
+    ).toBeVisible();
   });
 
   test('link "Mulai Belanja" di state kosong harus mengarah ke /marketplace', async ({
@@ -36,11 +39,8 @@ test.describe('Order History Page', () => {
     await expect(
       page.locator('text=Memuat riwayat pesanan...'),
     ).not.toBeVisible({ timeout: 8000 });
-    const belanja = page.getByRole('link', { name: /Mulai Belanja/i });
-    if (await belanja.isVisible()) {
-      await belanja.click();
-      await expect(page).toHaveURL(/.*marketplace/);
-    }
+    await page.getByRole('link', { name: /Mulai Belanja/i }).click();
+    await expect(page).toHaveURL(/.*marketplace/);
   });
 
   test('link "Kembali ke Marketplace" di header harus berfungsi', async ({

@@ -50,3 +50,4 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 /e2e/.auth/
+/tests/e2e/.auth/

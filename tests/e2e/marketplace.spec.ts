@@ -2,6 +2,43 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Marketplace Page', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/products', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'X-Target-Calories': '2000' },
+        body: JSON.stringify([
+          {
+            id: 'prod-1',
+            name: 'Ayam Panggang',
+            category: 'Protein',
+            image: 'FOOD',
+            price: 25000,
+            stok: 5,
+            badges: { healthSafe: true, aiRecommended: true },
+            tags: ['Protein'],
+            calories: 320,
+            protein: 30,
+          },
+        ]),
+      });
+    });
+    await page.route('**/api/cart', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ cart: [] }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+    });
     await page.goto('/marketplace');
     await page.evaluate(() => localStorage.removeItem('nutriscale-cart'));
     await page.reload();
@@ -31,8 +68,8 @@ test.describe('Marketplace Page', () => {
     const searchInput = page.getByPlaceholder('Search healthy products...');
     await expect(searchInput).toBeVisible();
     await searchInput.fill('ayam');
-    await page.waitForTimeout(500);
-    await expect(page.locator('body')).toBeVisible();
+    await expect(searchInput).toHaveValue('ayam');
+    await expect(page.getByText('Ayam Panggang')).toBeVisible();
   });
 
   test('jika tidak ada produk yang cocok, harus muncul pesan "No products found"', async ({
@@ -54,7 +91,7 @@ test.describe('Marketplace Page', () => {
     ).toBeVisible();
   });
 
-  test('keranjang harus menampilkan "Your cart is empty" saat kosong', async ({
+  test('keranjang harus menampilkan empty cart state saat kosong', async ({
     page,
   }) => {
     await page.route('**/api/cart', async (route) => {
@@ -69,6 +106,6 @@ test.describe('Marketplace Page', () => {
       }
     });
     await page.reload();
-    await expect(page.getByText('Your cart is empty')).toBeVisible();
+    await expect(page.getByText('Your cart is feeling lonely')).toBeVisible();
   });
 });

@@ -2,6 +2,20 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Checkout Page', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/cart', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ cart: [] }),
+      });
+    });
+    await page.route('**/api/products', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    });
     await page.route('**/api/user/me', async (route) => {
       await route.fulfill({
         status: 200,

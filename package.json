@@ -10,7 +10,9 @@
     "format:write": "prettier --write \"**/*.{js,jsx,ts,tsx,mjs,json,yml,yaml,css,scss}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,mjs,json,yml,yaml,css,scss}\"",
     "prepare": "husky",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node tests/e2e/run-e2e.mjs",
     "prisma:seed": "tsx prisma/seed.ts"
   },
   "lint-staged": {
