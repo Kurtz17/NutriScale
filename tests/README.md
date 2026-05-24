@@ -1,81 +1,313 @@
-# Dokumentasi Pengujian (Testing Documentation)
+# NutriScale Testing Documentation
 
-Dokumen ini berisi rincian skenario pengujian (*test cases*) yang telah diimplementasikan dalam proyek NutriScale menggunakan **Vitest** dan **React Testing Library**. Pengujian ini memastikan fungsionalitas backend (API, Middleware, Server Actions) serta komponen antarmuka (*Frontend Components*) berjalan sesuai spesifikasi.
+Dokumen ini menjelaskan struktur, cara menjalankan, dan cakupan pengujian
+NutriScale. Test suite menggunakan Vitest, React Testing Library, dan
+Playwright.
 
----
+## Ringkasan
 
-## 1. API Testing
-Pengujian yang dilakukan dengan mengirim request langsung ke API *endpoints* dari sistem yang diuji untuk memastikan balasan (*response code* dan data) sesuai ekspektasi, termasuk pengujian isolasi data antar pengguna.
-
-### Autentikasi & Sesi (Middleware & User Me)
-| Scenario | Request / Condition | Expected Result |
+| Area | Tool | Lokasi |
 | :--- | :--- | :--- |
-| Akses halaman *protected* tanpa sesi | Middleware: Akses *route* tanpa *session cookie* | Redirect ke `/login` |
-| Akses halaman *protected* dengan sesi | Middleware: Akses *route* dengan *session cookie* valid | Request diteruskan (*next*) |
-| Pengecekan sesi *error* | Middleware: *Exception* saat verifikasi | Redirect ke `/login` |
-| Ambil profil tanpa login | GET `/api/user-me` (tanpa otorisasi) | `401 Unauthorized` |
-| Ambil profil sukses | GET `/api/user-me` (sesi valid) | `200 OK`, data profil dikembalikan |
-| Profil terhapus di DB | GET `/api/user-me` (user dihapus manual di DB) | `404 Not Found` |
+| Unit test | Vitest | `tests/lib`, `tests/hooks`, `tests/actions` |
+| API test | Vitest | `tests/api` |
+| Component test | React Testing Library | `tests/components` |
+| Integration test | React Testing Library | `tests/integration` |
+| E2E test | Playwright | `tests/e2e` |
+| Test setup global | Vitest setup | `tests/setup.ts` |
+| Test fixture | Mock data | `tests/fixtures` |
 
-### Keranjang Belanja (Cart API)
-| Scenario | Request / Condition | Expected Result |
+## Script
+
+Jalankan dari root project.
+
+```bash
+npm run test
+npm run test:e2e
+npm run lint
+npm run build
+```
+
+Script yang relevan:
+
+```json
+{
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "test:e2e": "node tests/e2e/run-e2e.mjs"
+}
+```
+
+`npm run test:e2e` tetap menjalankan Playwright. Runner
+`tests/e2e/run-e2e.mjs` hanya bertugas menyiapkan Next.js dev server,
+memuat `.env`, menjalankan `@playwright/test`, lalu mematikan server yang
+dibuatnya.
+
+## Environment Untuk E2E Auth
+
+Authenticated E2E wajib menggunakan kredensial test yang tersedia di env.
+Project ini membaca env melalui `@next/env`, sehingga `.env`, `.env.local`,
+dan `.env.test` dapat digunakan.
+
+Env yang dibaca:
+
+```bash
+TEST_EMAIL=
+TEST_PASSWORD=
+TEST_ADMIN_EMAIL=
+TEST_ADMIN_PASSWORD=
+BETTER_AUTH_URL=
+PLAYWRIGHT_BASE_URL=
+```
+
+`TEST_ADMIN_EMAIL` dan `TEST_ADMIN_PASSWORD` bersifat opsional. Jika tidak
+diisi, E2E admin memakai akun admin seed project:
+`admin@nutriscale.com` / `adminpassword123`.
+
+Aturan base URL:
+
+1. Jika `PLAYWRIGHT_BASE_URL` ada, Playwright memakai nilai itu.
+2. Jika tidak ada, Playwright memakai `BETTER_AUTH_URL`.
+3. Jika keduanya tidak ada, fallback ke `http://localhost:3000`.
+
+`BETTER_AUTH_URL` penting karena Better Auth memvalidasi origin. Jika base URL
+Playwright berbeda dari origin auth, login global setup akan gagal.
+
+## Storage State Playwright
+
+Global setup E2E berada di:
+
+```bash
+tests/e2e/global-setup.ts
+```
+
+Saat `npm run test:e2e` dijalankan:
+
+1. Playwright membuka `/login`.
+2. Login user menggunakan `TEST_EMAIL` dan `TEST_PASSWORD`.
+3. Login admin menggunakan `TEST_ADMIN_EMAIL` dan `TEST_ADMIN_PASSWORD`, atau
+   fallback akun admin seed.
+4. Session browser disimpan otomatis ke:
+
+```bash
+tests/e2e/.auth/user.json
+tests/e2e/.auth/admin.json
+```
+
+File `.auth` adalah artifact lokal berisi session cookie dan tidak boleh ikut
+commit. Path ini sudah di-ignore oleh `.gitignore`.
+
+Jika `TEST_EMAIL` atau `TEST_PASSWORD` tidak ada, global setup akan gagal
+secara eksplisit. Authenticated tests tidak di-skip.
+
+## Menjalankan Dari Kondisi Auth Bersih
+
+PowerShell:
+
+```powershell
+Remove-Item -Recurse -Force .auth, playwright\.auth, tests\e2e\.auth -ErrorAction SilentlyContinue
+npm run test:e2e -- --reporter=list
+```
+
+Bash:
+
+```bash
+rm -rf .auth playwright/.auth tests/e2e/.auth
+npm run test:e2e -- --reporter=list
+```
+
+Jika database/auth memakai service eksternal dan sandbox membatasi network,
+jalankan dengan akses network yang diperlukan. Tanpa akses DB, login global
+setup dapat gagal saat Better Auth membaca user.
+
+## Vitest Setup
+
+Setup global ada di `tests/setup.ts`.
+
+Mock dan polyfill utama:
+
+- Prisma client mock untuk route/action test.
+- `next/headers` mock.
+- `matchMedia`.
+- `ResizeObserver`.
+- `IntersectionObserver`.
+- `scrollIntoView`.
+- `window.snap.pay` untuk flow Midtrans.
+- Auto cleanup React Testing Library setelah setiap test.
+
+## Cakupan Unit Dan API Test
+
+### Utilities
+
+| File | Cakupan |
+| :--- | :--- |
+| `tests/lib/utils.test.ts` | `cn`, `formatHarga` |
+| `tests/lib/address-utils.test.ts` | format alamat user |
+| `tests/lib/health-assessment-utils.test.ts` | mapper gender/category, pantangan medis, usia kehamilan |
+| `tests/hooks/useRegionData.test.ts` | `toTitleCase` |
+
+### Store dan hooks
+
+| File | Cakupan |
+| :--- | :--- |
+| `tests/lib/store/useCartStore.test.ts` | fetch cart, optimistic add, stok clamp, update, remove, clear, error path |
+| `tests/hooks/auth-hooks.test.tsx` | login, register, recovery, reset password |
+| `tests/hooks/marketplace-checkout-hooks.test.tsx` | marketplace load/filter/totals, checkout address/payment |
+| `tests/hooks/useOrders.test.tsx` | admin order load/filter/update/error |
+| `tests/hooks/useHealthDashboard.test.tsx` | dashboard loading, success, error |
+
+### API dan server actions
+
+| File | Cakupan |
+| :--- | :--- |
+| `tests/api/cart.test.ts` | cart GET/POST/DELETE |
+| `tests/api/checkout.test.ts` | checkout validation, stock, Midtrans token |
+| `tests/api/orders.test.ts` | user order history |
+| `tests/api/orders-cancel.test.ts` | cancel order rules |
+| `tests/api/products.test.ts` | product mapping |
+| `tests/api/user-me.test.ts` | current user profile |
+| `tests/api/webhook-midtrans.test.ts` | Midtrans signature and status mapping |
+| `tests/api/admin-dashboard.test.ts` | admin summary and chart range |
+| `tests/api/admin-products.test.ts` | admin create/update/delete product |
+| `tests/api/admin-orders.test.ts` | admin order list and status update |
+| `tests/api/admin-users.test.ts` | admin user list/delete/ban |
+| `tests/api/auth-touch.test.ts` | lastOnline touch endpoint |
+| `tests/api/health-dashboard.test.ts` | health stats and meal recommendations |
+| `tests/actions/health-assessment.test.ts` | save/update health assessment |
+
+## Cakupan Component Test
+
+| File | Cakupan |
+| :--- | :--- |
+| `tests/components/ui/button.test.tsx` | button render, click, disabled, variant |
+| `tests/components/ui/badge.test.tsx` | badge render, variant, custom class |
+| `tests/components/auth/forms.test.tsx` | login/register form state and submit |
+| `tests/components/marketplace/marketplace-components.test.tsx` | product card/grid, filter, cart item/sidebar |
+| `tests/components/checkout/checkout-components.test.tsx` | shipping form, payment summary, modals, order list |
+| `tests/components/orders/order-components.test.tsx` | status badge, cancel modal/button |
+| `tests/components/admin/admin-filters.test.tsx` | product/user/order filters and product table actions |
+| `tests/components/health-assessment/steps.test.tsx` | step validation and navigation |
+
+## Cakupan Integration Test
+
+| File | Cakupan |
+| :--- | :--- |
+| `tests/integration/marketplace-flow.test.tsx` | search, empty state, add to cart, checkout enable |
+| `tests/integration/checkout-flow.test.tsx` | required shipping validation, notification, confirmation modal |
+
+Integration test memakai mock dan harness lokal agar deterministic dan tidak
+memanggil API production.
+
+## Cakupan Playwright E2E
+
+E2E berada di `tests/e2e`.
+
+| File | Auth | Cakupan |
 | :--- | :--- | :--- |
-| Akses API tanpa login | GET / POST / DELETE `/api/cart` (tanpa sesi) | `401 Unauthorized` |
-| Ambil keranjang kosong | GET `/api/cart` (user belum punya item) | `200 OK`, mengembalikan *array* kosong `[]` |
-| Ambil isi keranjang | GET `/api/cart` (sesi valid) | `200 OK`, mengembalikan data produk & kuantitas |
-| Tambah produk baru | POST `/api/cart` (berisi `productId` & `quantity`) | `200 OK`, keranjang & item baru dibuat |
-| Tambah kuantitas produk | POST `/api/cart` (produk sudah ada di keranjang) | `200 OK`, kuantitas produk ditambahkan |
-| *Payload* tidak lengkap | POST `/api/cart` (tanpa ID/kuantitas) | `400 Bad Request` |
-| Hapus item keranjang | DELETE `/api/cart` (mengirim `cartItemId`) | `200 OK`, item terhapus dari DB |
+| `auth.spec.ts` | Tidak | login/register render, validation, links, invalid credentials |
+| `homepage.spec.ts` | Tidak | homepage content, navigation, mobile viewport |
+| `protected-routes.spec.ts` | Tidak | protected routes redirect ke `/login` |
+| `marketplace.spec.ts` | Ya | marketplace render, products, search, empty state, filter, empty cart |
+| `checkout.spec.ts` | Ya | shipping form, billing summary, disabled payment, default address, back navigation |
+| `order-history.spec.ts` | Ya | heading, empty state, navigation links, footer |
+| `health-assessment.spec.ts` | Ya | Step 1 render dan back navigation |
+| `payment.spec.ts` | Ya | mocked Midtrans Snap success, Snap error, checkout API error |
+| `admin.spec.ts` | Admin | dashboard, product CRUD UI, order filter/status update, user ban |
 
-### Checkout & Pesanan (Checkout & Orders API)
-| Scenario | Request / Condition | Expected Result |
-| :--- | :--- | :--- |
-| *Checkout* tanpa login | POST `/api/checkout` (tanpa sesi) | `401 Unauthorized` |
-| *Checkout* keranjang kosong | POST `/api/checkout` | `400 Bad Request` ("Keranjang belanja kosong") |
-| *Checkout* stok habis | POST `/api/checkout` (Kuantitas dibeli > Stok DB) | `400 Bad Request` ("Stok tidak mencukupi") |
-| *Checkout* Sukses | POST `/api/checkout` (Stok cukup, data valid) | `200 OK`, mengembalikan `Snap Token` Midtrans |
-| Ambil riwayat pesanan | GET `/api/orders` | `200 OK`, format benar & kalkulasi total kalori akurat |
-| Keamanan / *Data Isolation* | GET `/api/orders` | *Query* difilter berdasarkan `userId`, aman dari akses silang |
-| Database gagal | GET `/api/orders` (Simulasi DB *down*) | `500 Internal Server Error` |
+Authenticated E2E memakai `storageState` dari `tests/e2e/.auth/user.json`.
+Admin E2E memakai `storageState` dari `tests/e2e/.auth/admin.json`. Test API di
+Playwright menggunakan `page.route()` untuk response yang perlu stabil, tetapi
+login tetap memakai Better Auth dan user test dari env.
 
-### Midtrans Webhook
-| Scenario | Request / Condition | Expected Result |
-| :--- | :--- | :--- |
-| Signature palsu / *Invalid* | POST `/api/webhook-midtrans` dengan *Signature Key* salah | `400 Bad Request` (Akses ditolak) |
-| Pembayaran Sukses | POST status transaksi `settlement` / `capture` | `200 OK`, pesanan `SELESAI`, stok dikurangi, keranjang dikosongkan |
-| Pembayaran Gagal/Batal | POST status transaksi `cancel` / `expire` / `deny` | `200 OK`, status pesanan menjadi `GAGAL` |
+## Menjalankan Test Spesifik
 
-### Katalog Produk (Products API)
-| Scenario | Request / Condition | Expected Result |
-| :--- | :--- | :--- |
-| Ambil daftar produk | GET `/api/products` | `200 OK`, format produk & *mapping* nilai gizi (kalori) benar |
-| Katalog kosong | GET `/api/products` (Belum ada produk di DB) | `200 OK`, mengembalikan *array* kosong `[]` |
+Vitest:
 
----
+```bash
+npm run test -- tests/lib/utils.test.ts
+npm run test -- tests/api/admin-products.test.ts
+```
 
-## 2. Server Actions Testing
-Pengujian yang dilakukan terhadap fungsionalitas fungsi *backend* (Next.js Server Actions) yang biasanya dipanggil secara langsung oleh komponen klien (Form).
+Playwright:
 
-### Health Assessment (`saveHealthAssessment`)
-| Scenario | Request / Condition | Expected Result |
-| :--- | :--- | :--- |
-| *Submit* tanpa `userId` | Parameter `userId` dikosongkan pada aksi | Mengembalikan objek *error* "User ID is required" |
-| Buat profil baru | Data lengkap, user belum memiliki riwayat profil | Profil kesehatan baru terbuat dan tersimpan di database |
-| *Update* profil lama | Data lengkap, profil user sudah ada di database | Baris data profil lama diperbarui (*update*) |
+```bash
+npm run test:e2e -- --reporter=list
+npm run test:e2e -- tests/e2e/marketplace.spec.ts --reporter=list
+npm run test:e2e -- --project=authenticated --reporter=list
+npm run test:e2e -- --project=admin --reporter=list
+```
 
----
+Mode UI Playwright:
 
-## 3. UI Components & Utility Testing
-Pengujian fungsionalitas komponen *frontend* (menggunakan JSDOM) untuk memastikan tampilan dasar dan logika visual (seperti manipulasi CSS *class*) bekerja dengan semestinya.
+```bash
+npx playwright test --ui
+```
 
-### Komponen Dasar & Utilitas
-| Scenario | Request / Condition | Expected Result |
-| :--- | :--- | :--- |
-| Penggabungan *class* dasar | Menjalankan `cn('bg-red', 'text-white')` | Mengembalikan teks `'bg-red text-white'` |
-| Resolusi konflik Tailwind | Menjalankan `cn('p-2 text-sm', 'text-lg')` | Mengembalikan `'p-2 text-lg'` (*class* saling tumpuk teratasi) |
-| *Render* komponen Button | me-render `<Button>Click Me</Button>` | Tombol muncul di *Virtual DOM* dengan teks "Click Me" |
-| Simulasi *Click Event* | Menekan komponen *Button* dengan parameter `onClick` | *Function handler* (*spy*) dipanggil tepat 1 kali |
-| Perubahan *Variant Button* | me-render `<Button variant="destructive">` | Atribut CSS merah (`bg-destructive`) berhasil disematkan |
-| *Render* komponen Badge | me-render `<Badge>New</Badge>` | *Badge* muncul di *Virtual DOM* dengan teks "New" |
-| Kustomisasi *Class Badge* | me-render `<Badge className="custom">` | *Class* `custom` berhasil ditambahkan di samping *class* bawaan |
+## Expected Result Terbaru
+
+Hasil terakhir yang diverifikasi:
+
+```text
+npm run test       -> 34 files, 132 tests passed
+npm run test:e2e   -> 45 passed, 0 skipped
+npm run lint       -> 0 errors, existing warnings only
+npm run build      -> passed with network access for next/font Google Fonts
+```
+
+Catatan build:
+
+- `next/font` membutuhkan akses ke Google Fonts saat production build.
+- Jika network dibatasi, build dapat gagal saat fetch font `Inter`.
+
+## Troubleshooting
+
+### Authenticated E2E gagal login
+
+Cek:
+
+1. `TEST_EMAIL` dan `TEST_PASSWORD` ada di env.
+2. User test sudah ada, password benar, dan email sudah verified bila auth
+   mewajibkan verifikasi.
+3. `BETTER_AUTH_URL` sama dengan origin Playwright.
+4. Database dari `DATABASE_URL` bisa diakses oleh proses test.
+
+### Admin E2E gagal login
+
+Cek:
+
+1. Akun admin seed `admin@nutriscale.com` tersedia, atau isi
+   `TEST_ADMIN_EMAIL` dan `TEST_ADMIN_PASSWORD`.
+2. User admin punya `role: admin`.
+3. Email admin sudah verified jika auth mewajibkan verifikasi.
+
+### `storageState` tidak dibuat
+
+Hapus auth state lama lalu run ulang:
+
+```bash
+rm -rf .auth playwright/.auth tests/e2e/.auth
+npm run test:e2e -- --reporter=list
+```
+
+Jika login gagal, `tests/e2e/.auth/user.json` tidak akan dibuat.
+
+### E2E hang setelah semua test selesai
+
+Gunakan script `npm run test:e2e`, bukan menjalankan dev server manual.
+Runner akan membuat dan mematikan Next.js dev server sendiri.
+
+### Playwright test protected route tidak redirect
+
+Pastikan context unauthenticated bersih. Test `protected-routes.spec.ts`
+memanggil `page.context().clearCookies()` sebelum membuka route protected.
+
+## Best Practices Untuk Menambah Test Baru
+
+- Pakai selector berbasis role, label, dan text terlebih dahulu.
+- Tambahkan `data-testid` hanya jika selector accessible tidak stabil.
+- Jangan bergantung pada API production.
+- Mock request dengan `page.route()` untuk E2E yang membutuhkan data stabil.
+- Gunakan fixture dari `tests/fixtures` untuk data yang dipakai berulang.
+- Jangan memakai `waitForTimeout` kecuali benar-benar tidak ada sinyal UI atau
+  network yang lebih stabil.
+- Setiap test harus punya assertion behavior nyata, bukan hanya memastikan page
+  tidak crash.
