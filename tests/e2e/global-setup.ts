@@ -1,4 +1,4 @@
-import { chromium } from '@playwright/test';
+import { type FullConfig, chromium } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
@@ -26,6 +26,45 @@ type LoginStateOptions = {
   expectedPath: string;
   label: string;
 };
+
+function getRequestedProjects() {
+  return process.argv.reduce<string[]>((projects, argument, index, args) => {
+    if (argument === '--project' && args[index + 1]) {
+      return [...projects, args[index + 1]];
+    }
+
+    if (argument.startsWith('--project=')) {
+      return [...projects, argument.slice('--project='.length)];
+    }
+
+    return projects;
+  }, []);
+}
+
+function getActiveProjects(config: FullConfig) {
+  const requestedProjects = getRequestedProjects();
+
+  if (requestedProjects.length === 0) {
+    return config.projects;
+  }
+
+  return config.projects.filter((project) =>
+    requestedProjects.includes(project.name),
+  );
+}
+
+function usesStorageState(config: FullConfig, stateFile: string) {
+  const normalizedStateFile = path.normalize(stateFile);
+
+  return getActiveProjects(config).some((project) => {
+    const storageState = project.use.storageState;
+
+    return (
+      typeof storageState === 'string' &&
+      path.normalize(storageState) === normalizedStateFile
+    );
+  });
+}
 
 async function loginAndSaveState({
   email,
@@ -66,28 +105,39 @@ async function loginAndSaveState({
   }
 }
 
-export default async function globalSetup() {
-  fs.mkdirSync(path.dirname(USER_AUTH_STATE_FILE), { recursive: true });
+export default async function globalSetup(config: FullConfig) {
+  const needsUserState = usesStorageState(config, USER_AUTH_STATE_FILE);
+  const needsAdminState = usesStorageState(config, ADMIN_AUTH_STATE_FILE);
 
-  if (!TEST_EMAIL || !TEST_PASSWORD) {
-    throw new Error(
-      'TEST_EMAIL and TEST_PASSWORD must be set in .env, .env.local, or .env.test for authenticated E2E tests.',
-    );
+  if (!needsUserState && !needsAdminState) {
+    return;
   }
 
-  await loginAndSaveState({
-    email: TEST_EMAIL,
-    password: TEST_PASSWORD,
-    stateFile: USER_AUTH_STATE_FILE,
-    expectedPath: '/',
-    label: 'user',
-  });
+  fs.mkdirSync(path.dirname(USER_AUTH_STATE_FILE), { recursive: true });
 
-  await loginAndSaveState({
-    email: TEST_ADMIN_EMAIL,
-    password: TEST_ADMIN_PASSWORD,
-    stateFile: ADMIN_AUTH_STATE_FILE,
-    expectedPath: '/admin/dashboard',
-    label: 'admin',
-  });
+  if (needsUserState) {
+    if (!TEST_EMAIL || !TEST_PASSWORD) {
+      throw new Error(
+        'TEST_EMAIL and TEST_PASSWORD must be set in .env, .env.local, or .env.test for authenticated E2E tests.',
+      );
+    }
+
+    await loginAndSaveState({
+      email: TEST_EMAIL,
+      password: TEST_PASSWORD,
+      stateFile: USER_AUTH_STATE_FILE,
+      expectedPath: '/',
+      label: 'user',
+    });
+  }
+
+  if (needsAdminState) {
+    await loginAndSaveState({
+      email: TEST_ADMIN_EMAIL,
+      password: TEST_ADMIN_PASSWORD,
+      stateFile: ADMIN_AUTH_STATE_FILE,
+      expectedPath: '/admin/dashboard',
+      label: 'admin',
+    });
+  }
 }
