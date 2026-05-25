@@ -22,6 +22,7 @@ export default function Navbar() {
   const { data: session } = authClient.useSession();
   const isLoggedIn = !!session?.user;
   const isAdmin = session?.user?.role === 'admin';
+  const isLandingPage = pathname === '/';
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -35,7 +36,7 @@ export default function Navbar() {
   ].includes(pathname);
 
   useEffect(() => {
-    if (!isLoggedIn || isAdmin) return;
+    if (isLandingPage || !isLoggedIn || isAdmin) return;
     fetchCart();
     // Fetch fresh user data from DB (bypasses session cache)
     fetch('/api/user/me')
@@ -44,7 +45,7 @@ export default function Navbar() {
         if (data && !data.error) setUserProfile(data);
       })
       .catch(() => {});
-  }, [isLoggedIn, fetchCart, isAdmin]);
+  }, [isLandingPage, isLoggedIn, fetchCart, isAdmin]);
 
   // Daftar rute utama yang valid di aplikasimu
   const validRoutes = [
@@ -73,7 +74,8 @@ export default function Navbar() {
 
   // Jika admin, halaman auth, rute admin, atau halaman tidak ditemukan (404), jangan tampilkan navbar
   const isAdminRoute = pathname.startsWith('/admin');
-  if (isAdmin || isAuthPage || isAdminRoute || isPageNotFound) return null;
+  if (isLandingPage || isAdmin || isAuthPage || isAdminRoute || isPageNotFound)
+    return null;
 
   const handleLogout = async () => {
     await authClient.signOut();

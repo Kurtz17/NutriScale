@@ -11,6 +11,7 @@ export default function Footer() {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user?.role === 'admin';
+  const isLandingPage = pathname === '/';
   const isAuthPage = [
     '/login',
     '/register',
@@ -43,7 +44,8 @@ export default function Footer() {
   const isPageNotFound = !isKnownRoute;
   const isAdminRoute = pathname.startsWith('/admin');
 
-  if (isAdmin || isAuthPage || isPageNotFound || isAdminRoute) return null;
+  if (isLandingPage || isAdmin || isAuthPage || isPageNotFound || isAdminRoute)
+    return null;
 
   return (
     <footer className="bg-[#E1EEDD] text-black pb-10 rounded-t-[3rem] mt-20">
