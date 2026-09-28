@@ -4,6 +4,10 @@ export interface HealthFormData {
   gender: string;
   category: Category | '';
   age: number | '';
+  activityFactor?: number;
+  stressFactor?: number;
+  allergies?: string;
+  dietaryRestrictions?: string;
 
   weight: number | '';
   height: number | '';

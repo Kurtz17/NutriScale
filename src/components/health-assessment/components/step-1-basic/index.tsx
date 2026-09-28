@@ -109,6 +109,100 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
             {isBalita ? 'Range: 0 - 60 bulan' : 'Range: 5 - 110 tahun'}
           </p>
         </div>
+
+        <div className="pt-2 border-t border-gray-100 my-2" />
+
+        {/* Activity Factor */}
+        <div>
+          <label className="block mb-1 font-medium text-sm">
+            Activity Factor
+          </label>
+          <select
+            className="w-full border p-2 rounded text-sm bg-white"
+            value={formData.activityFactor ?? ''}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                activityFactor:
+                  e.target.value === '' ? undefined : Number(e.target.value),
+              })
+            }
+          >
+            <option value="">Select activity factor</option>
+            <option value="1.2">Istirahat Total / Bedrest (1.2)</option>
+            <option value="1.375">
+              Aktivitas Ringan / Kerja Kantor (1.375)
+            </option>
+            <option value="1.55">
+              Aktivitas Sedang / Olahraga Ringan (1.55)
+            </option>
+            <option value="1.725">
+              Aktivitas Berat / Olahraga Rutin (1.725)
+            </option>
+          </select>
+        </div>
+
+        {/* Stress Factor */}
+        <div>
+          <label className="block mb-1 font-medium text-sm">
+            Stress Factor
+          </label>
+          <select
+            className="w-full border p-2 rounded text-sm bg-white"
+            value={formData.stressFactor ?? ''}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                stressFactor:
+                  e.target.value === '' ? undefined : Number(e.target.value),
+              })
+            }
+          >
+            <option value="">Select stress factor</option>
+            <option value="1.0">Normal / Tanpa Stres Fisik (1.0)</option>
+            <option value="1.2">Stres Ringan / Infeksi Ringan (1.2)</option>
+            <option value="1.3">Stres Sedang / Operasi Ringan (1.3)</option>
+            <option value="1.5">Stres Berat / Trauma / Luka Bakar (1.5)</option>
+          </select>
+        </div>
+
+        <div className="pt-2 border-t border-gray-100 my-2" />
+        {/* Alergi */}
+        <div>
+          <label className="block mb-1 font-medium text-sm">
+            Alergi Makanan{' '}
+            <span className="text-gray-400 font-normal">(Opsional)</span>
+          </label>
+          <Input
+            type="text"
+            placeholder="Contoh: Udang, Kacang, Susu"
+            value={formData.allergies ?? ''}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                allergies: e.target.value,
+              })
+            }
+          />
+        </div>
+        {/* Pantangan Tipe Makanan */}
+        <div>
+          <label className="block mb-1 font-medium text-sm">
+            Pantangan Tipe Makanan{' '}
+            <span className="text-gray-400 font-normal">(Opsional)</span>
+          </label>
+          <Input
+            type="text"
+            placeholder="Contoh: Pedas, Daging Merah, Gluten"
+            value={formData.dietaryRestrictions ?? ''}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                dietaryRestrictions: e.target.value,
+              })
+            }
+          />
+        </div>
       </div>
 
       {/* BUTTON */}
