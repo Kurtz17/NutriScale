@@ -38,12 +38,7 @@ const ProductCard: React.FC<{
         </div>
 
         <div className="flex gap-2 mt-4">
-          {product.badges.healthSafe && (
-            <Badge className="bg-green-500 text-white hover:bg-green-600">
-              Health-Safe
-            </Badge>
-          )}
-          {product.badges.aiRecommended && (
+          {product.badges?.aiRecommended && (
             <Badge className="bg-blue-500 text-white hover:bg-blue-600">
               AI Recommended
             </Badge>

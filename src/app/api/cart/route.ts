@@ -50,10 +50,7 @@ export async function GET() {
         category: p.kategori,
         image: p.gambar,
         price: Number(p.harga || 0),
-        badges: {
-          healthSafe: Boolean(gizi.healthSafe),
-          aiRecommended: Boolean(gizi.aiRecommended),
-        },
+        badges: {},
         tags: (gizi.tags as string[]) || [],
         calories: Number(gizi.calories) || 0,
         protein: Number(gizi.protein) || 0,

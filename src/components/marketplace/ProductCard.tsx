@@ -15,10 +15,7 @@ export function ProductCard({
       </div>
 
       <div className="flex gap-1.5 flex-wrap">
-        <span className="bg-[#7CB342] text-white text-[8px] font-bold px-2 py-0.5 rounded-full">
-          Health-Safe
-        </span>
-        {product.badges.aiRecommended && (
+        {product.badges?.aiRecommended && (
           <span className="bg-[#4A90E2] text-white text-[8px] font-bold px-2 py-0.5 rounded-full">
             AI Recommended
           </span>

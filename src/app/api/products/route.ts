@@ -83,11 +83,7 @@ export async function GET() {
         stok: p.stok,
         label_risiko: p.labelRisiko || '',
         badges: {
-          healthSafe: Boolean(gizi.healthSafe),
-          aiRecommended:
-            recommendedProductIds.size > 0
-              ? isAiRecommended
-              : Boolean(gizi.aiRecommended),
+          aiRecommended: isAiRecommended,
         },
         tags: (gizi.tags as string[]) || [],
         calories: Number(gizi.calories) || 0,
@@ -97,6 +93,11 @@ export async function GET() {
         sugars: Number(gizi.sugars) || 0,
         sodium: Number(gizi.sodium) || 0,
         cholesterol: Number(gizi.cholesterol) || 0,
+        foodType: (gizi.foodType as string) || '',
+        allergens: (gizi.allergens as string[]) || [],
+        ingredients: (gizi.ingredients as string[]) || [],
+        cookingMethod: (gizi.cookingMethod as string) || '',
+        spicyLevel: Number(gizi.spicyLevel) || 0,
       };
     });
 

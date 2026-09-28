@@ -46,8 +46,6 @@ export async function PATCH(
               sodium: Number(nilaiGizi.sodium || 0),
               cholesterol: Number(nilaiGizi.cholesterol || 0),
               tags: nilaiGizi.tags || [],
-              healthSafe: Boolean(nilaiGizi.healthSafe),
-              aiRecommended: Boolean(nilaiGizi.aiRecommended),
             }
           : undefined,
       },
