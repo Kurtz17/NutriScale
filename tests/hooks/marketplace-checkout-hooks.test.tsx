@@ -34,7 +34,7 @@ describe('marketplace and checkout hooks', () => {
       if (url === '/api/products') {
         return Promise.resolve({
           ok: true,
-          headers: new Headers({ 'X-Target-Calories': '1800' }),
+          headers: new Headers(),
           json: () => Promise.resolve([mockProduct, mockSecondProduct]),
         });
       }
@@ -55,8 +55,6 @@ describe('marketplace and checkout hooks', () => {
       'Sarapan',
       'Makan Siang',
     ]);
-    expect(result.current.targetCalories).toBe(1800);
-    expect(result.current.totalCalories).toBe(640);
     expect(result.current.subtotal).toBe(50000);
 
     act(() => {

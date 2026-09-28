@@ -16,14 +16,12 @@ export default function MarketplacePage() {
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
-    targetCalories,
     categories,
     filteredProducts,
     cart,
     addToCart,
     updateQuantity,
     removeFromCart,
-    totalCalories,
     subtotal,
     handleCheckout,
   } = useMarketplace();
@@ -66,8 +64,6 @@ export default function MarketplacePage() {
           <div className="w-full lg:w-auto order-1 lg:order-2">
             <CartSidebar
               cart={cart}
-              totalCalories={totalCalories}
-              targetCalories={targetCalories}
               subtotal={subtotal}
               updateQuantity={updateQuantity}
               removeFromCart={removeFromCart}

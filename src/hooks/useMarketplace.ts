@@ -12,17 +12,12 @@ export function useMarketplace() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [targetCalories, setTargetCalories] = useState(2000);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const res = await fetch('/api/products');
         if (res.ok) {
-          const targetCaloriesHeader = res.headers.get('X-Target-Calories');
-          if (targetCaloriesHeader) {
-            setTargetCalories(Number(targetCaloriesHeader));
-          }
           const data = await res.json();
           setProducts(Array.isArray(data) ? data : []);
         }
@@ -55,12 +50,6 @@ export function useMarketplace() {
     });
   }, [products, searchQuery, selectedCategory]);
 
-  const totalCalories = useMemo(
-    () =>
-      cart.reduce((total, item) => total + item.calories * item.quantity, 0),
-    [cart],
-  );
-
   const subtotal = useMemo(
     () => cart.reduce((total, item) => total + item.price * item.quantity, 0),
     [cart],
@@ -78,14 +67,12 @@ export function useMarketplace() {
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
-    targetCalories,
     categories,
     filteredProducts,
     cart,
     addToCart,
     updateQuantity,
     removeFromCart,
-    totalCalories,
     subtotal,
     handleCheckout,
   };
