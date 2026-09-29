@@ -95,8 +95,6 @@ describe('marketplace components', () => {
     render(
       <CartSidebar
         cart={[]}
-        totalCalories={0}
-        targetCalories={2000}
         subtotal={0}
         updateQuantity={vi.fn()}
         removeFromCart={vi.fn()}

@@ -31,6 +31,8 @@ export async function GET() {
       { title: 'Body Mass Index (BMI)', value: '0.0', status: 'Normal' },
       { title: 'Daily Calories', value: `0 / 0`, progress: 0 },
       { title: 'Protein Intake', value: `0 / 0g`, progress: 0 },
+      { title: 'Carbohydrate Intake', value: `0 / 0g`, progress: 0 },
+      { title: 'Fat Intake', value: `0 / 0g`, progress: 0 },
       { title: 'Health Status', value: 'No Data Yet' },
     ];
 
@@ -46,6 +48,8 @@ export async function GET() {
         profile.anjuranKaloriDokter ||
         0;
       const targetProtein = mealPlanDetail?.distribusi?.protein_g || 0;
+      const targetCarbs = mealPlanDetail?.distribusi?.carbs_g || 0;
+      const targetFat = mealPlanDetail?.distribusi?.fat_g || 0;
       const narasiAI = mealPlanDetail?.narasiAI || '';
 
       // Meal sessions config
@@ -76,6 +80,8 @@ export async function GET() {
 
       let currentCalorieIntake = 0;
       let currentProteinIntake = 0;
+      let currentCarbsIntake = 0;
+      let currentFatIntake = 0;
       const purchasedProductIds = new Set<string>();
 
       pesananHariIni.forEach((pesanan) => {
@@ -84,8 +90,12 @@ export async function GET() {
           const gizi = (item.produk.nilaiGizi as Record<string, unknown>) || {};
           const cals = Number(gizi.calories) || 0;
           const prot = Number(gizi.protein) || 0;
+          const carbs = Number(gizi.carbs) || 0;
+          const fat = Number(gizi.fat) || 0;
           currentCalorieIntake += cals * item.kuantitas;
           currentProteinIntake += prot * item.kuantitas;
+          currentCarbsIntake += carbs * item.kuantitas;
+          currentFatIntake += fat * item.kuantitas;
         });
       });
 
@@ -158,6 +168,17 @@ export async function GET() {
             targetProtein > 0
               ? (currentProteinIntake / targetProtein) * 100
               : 0,
+        },
+        {
+          title: 'Carbohydrate Intake',
+          value: `${Math.round(currentCarbsIntake)}g / ${Math.round(targetCarbs)}g`,
+          progress:
+            targetCarbs > 0 ? (currentCarbsIntake / targetCarbs) * 100 : 0,
+        },
+        {
+          title: 'Fat Intake',
+          value: `${Math.round(currentFatIntake)}g / ${Math.round(targetFat)}g`,
+          progress: targetFat > 0 ? (currentFatIntake / targetFat) * 100 : 0,
         },
         { title: 'Health Status', value: latest.statusNutrisi },
       ];

@@ -39,7 +39,7 @@ describe('API Health Dashboard', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.stats).toHaveLength(4);
+    expect(data.stats).toHaveLength(6);
     expect(data.meals).toEqual([]);
     expect(data.targetCalories).toBe(0);
   });
@@ -56,7 +56,7 @@ describe('API Health Dashboard', () => {
           mealPlan: {
             detailRencanaMakan: {
               target_kalori_harian: 2000,
-              distribusi: { protein_g: 90 },
+              distribusi: { protein_g: 90, carbs_g: 250, fat_g: 60 },
               narasiAI: 'Pilih protein tanpa lemak.',
               rekomendasi_pagi: [
                 {
@@ -82,7 +82,7 @@ describe('API Health Dashboard', () => {
             kuantitas: 2,
             produk: {
               id: 'prod-x',
-              nilaiGizi: { calories: 250, protein: 20 },
+              nilaiGizi: { calories: 250, protein: 20, carbs: 30, fat: 10 },
             },
           },
         ],
@@ -107,6 +107,14 @@ describe('API Health Dashboard', () => {
     expect(data.stats[2]).toMatchObject({
       title: 'Protein Intake',
       value: '40g / 90g',
+    });
+    expect(data.stats[3]).toMatchObject({
+      title: 'Carbohydrate Intake',
+      value: '60g / 250g',
+    });
+    expect(data.stats[4]).toMatchObject({
+      title: 'Fat Intake',
+      value: '20g / 60g',
     });
     expect(data.meals[0]).toMatchObject({
       type: 'Breakfast',
