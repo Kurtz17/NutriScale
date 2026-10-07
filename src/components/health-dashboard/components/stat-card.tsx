@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Droplet, Flame, Heart } from 'lucide-react';
+import { Activity, Droplet, Flame, Heart, Nut, Wheat } from 'lucide-react';
 
 import ProgressBar from './progress-bar';
 
@@ -24,6 +24,10 @@ export default function StatCard({ stat }: StatCardProps) {
         return <Flame className="w-5 h-5 text-gray-500" />;
       case 'Protein Intake':
         return <Droplet className="w-5 h-5 text-gray-500" />;
+      case 'Carbohydrate Intake':
+        return <Wheat className="w-5 h-5 text-gray-500" />;
+      case 'Fat Intake':
+        return <Nut className="w-5 h-5 text-gray-500" />;
       case 'Health Status':
         return <Heart className="w-5 h-5 text-gray-500" />;
       default:
@@ -48,7 +52,15 @@ export default function StatCard({ stat }: StatCardProps) {
           <div className="mt-3">
             <ProgressBar
               value={stat.progress}
-              color={stat.title === 'Protein Intake' ? 'green' : 'blue'}
+              color={
+                stat.title === 'Protein Intake'
+                  ? 'green'
+                  : stat.title === 'Carbohydrate Intake'
+                    ? 'amber'
+                    : stat.title === 'Fat Intake'
+                      ? 'purple'
+                      : 'blue'
+              }
             />
             <div className="flex justify-between items-center mt-1">
               <p className="text-xs text-gray-400">

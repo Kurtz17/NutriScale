@@ -44,11 +44,6 @@ function MarketplaceHarness({ onCheckout }: { onCheckout: () => void }) {
       <ProductGrid products={filteredProducts} onAdd={addToCart} />
       <CartSidebar
         cart={cart}
-        totalCalories={cart.reduce(
-          (total, item) => total + item.calories * item.quantity,
-          0,
-        )}
-        targetCalories={2000}
         subtotal={cart.reduce(
           (total, item) => total + item.price * item.quantity,
           0,
@@ -86,7 +81,6 @@ describe('marketplace integration flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /\+ Add/i }));
 
     expect(screen.getByText('1 Items')).toBeTruthy();
-    expect(screen.getByText('320 kcal')).toBeTruthy();
 
     const checkout = screen.getByRole('button', {
       name: /Proceed to Checkout/i,

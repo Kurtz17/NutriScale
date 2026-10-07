@@ -7,7 +7,7 @@ export default function ProgressBar({
   color = 'blue',
 }: {
   value: number;
-  color?: 'blue' | 'green';
+  color?: 'blue' | 'green' | 'amber' | 'purple';
 }) {
   const [width, setWidth] = useState(0);
 
@@ -17,6 +17,8 @@ export default function ProgressBar({
 
   const getColor = () => {
     if (color === 'green') return '#57AA70'; // hijau baru
+    if (color === 'amber') return '#D9A441'; // kuning gandum (carbs)
+    if (color === 'purple') return '#8B5FBF'; // ungu lemak (fat)
     return '#4C7DC1'; // biru baru
   };
 
