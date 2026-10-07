@@ -3,13 +3,22 @@ export interface Product {
   name: string;
   category: string;
   image: string;
-  badges: {
-    healthSafe: boolean;
-    aiRecommended: boolean;
+  badges?: {
+    aiRecommended?: boolean;
   };
   tags: string[];
   calories: number;
   protein: number;
+  fat: number;
+  carbs: number;
+  sugars: number;
+  sodium: number;
+  cholesterol: number;
+  foodType: string;
+  allergens: string[];
+  ingredients?: string[];
+  cookingMethod?: string;
+  spicyLevel?: number;
   price: number;
   stok: number | null;
 }

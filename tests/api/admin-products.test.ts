@@ -32,8 +32,11 @@ const productPayload = {
     sodium: '120',
     cholesterol: '0',
     tags: ['Low Sugar'],
-    healthSafe: true,
-    aiRecommended: false,
+    foodType: 'carb',
+    allergens: [],
+    ingredients: ['oats', 'banana'],
+    cookingMethod: 'boiled',
+    spicyLevel: 0,
   },
 };
 
@@ -89,8 +92,6 @@ describe('API Admin Products', () => {
           calories: 320,
           protein: 12,
           tags: ['Low Sugar'],
-          healthSafe: true,
-          aiRecommended: false,
         }),
       }),
     });
