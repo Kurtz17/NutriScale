@@ -149,6 +149,10 @@ model RiwayatAnalisis {
   bmi           Decimal          @db.Decimal(5, 2)
   lila          Decimal?         @db.Decimal(5, 2)
   statusNutrisi String           @map("status_nutrisi")
+  kalori        Decimal?         @db.Decimal(7, 2)
+  karbohidrat   Decimal?         @db.Decimal(6, 2)
+  protein       Decimal?         @db.Decimal(6, 2)
+  lemak         Decimal?         @db.Decimal(6, 2)
   createdAt     DateTime         @default(now()) @map("created_at")
 
   mealPlan      MealPlan?

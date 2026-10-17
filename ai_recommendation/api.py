@@ -3,21 +3,24 @@ import uvicorn
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Security, Request
 from fastapi.security.api_key import APIKeyHeader
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
+
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from model import load_and_preprocess_api_data, jalankan_ai_rekomendasi
+from model import load_and_preprocess_api_data, jalankan_ai_rekomendasi, NutriScaleDataError
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # ==========================================================
 # GLOABAL STATE: PRE-LOAD DATASET & SCALER KE MEMORY RAM
 # ==========================================
-# Load .env dari root (parent directory)
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
+# Load .env (Local fallback)
+load_dotenv()
 
 df_dataset = None
 scaler_dict = None
@@ -37,7 +40,7 @@ limiter = Limiter(key_func=get_remote_address)
 async def lifespan(app: FastAPI):
     global df_dataset, scaler_dict
     
-    api_url = os.environ.get("NEXT_PUBLIC_APP_URL", "http://localhost:3000") + "/api/products"
+    api_url = os.environ.get("NEXT_PUBLIC_APP_URL", "http://localhost:3000").rstrip("/") + "/api/products"
     print(f"\n[API Startup] Memuat Dataset Makanan dari {api_url}...")
     
     df_dataset, scaler_dict = load_and_preprocess_api_data(api_url)
@@ -56,6 +59,15 @@ async def lifespan(app: FastAPI):
 # ==========================================================
 # INSTANCE APP
 # ==========================================================
+# Compatibility shim for Starlette 1.x Router.__init__ where on_startup/shutdown were deprecated
+import starlette.routing
+_orig_router_init = starlette.routing.Router.__init__
+def _compat_router_init(self, *args, **kwargs):
+    kwargs.pop('on_startup', None)
+    kwargs.pop('on_shutdown', None)
+    return _orig_router_init(self, *args, **kwargs)
+starlette.routing.Router.__init__ = _compat_router_init
+
 app = FastAPI(
     title="NutriScale AI Engine API",
     description="Endpoint sistem rekomendasi Production-safe ML+LLM.",
@@ -65,9 +77,52 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Mengizinkan request dari frontend (CORS)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Menambahkan endpoint /metrics untuk sistem monitoring Railway
+Instrumentator().instrument(app).expose(app, include_in_schema=False, should_gzip=True)
+
 # ==========================================================
 # SCHEMAS (Strict dengan Prisma DB)
 # ==========================================================
+class MakroNutriScaleInput(BaseModel):
+    """Satu makronutrien dari MacroResult nutri-calc.ts."""
+    percent: float = Field(..., ge=0, le=100)
+    grams: float = Field(..., ge=0)
+
+
+class NutrisiNutriScaleInput(BaseModel):
+    """
+    Hasil perhitungan gizi NutriScale (output `calculateMacros` di nutri-calc.ts).
+    AI hanya MEMBACA data ini — tidak menghitung kalori/makro sendiri.
+    """
+    lifeStage: Optional[str] = None
+    calories: float = Field(..., gt=0, description="Target kalori harian (kkal)")
+    carbohydrates: MakroNutriScaleInput
+    protein: MakroNutriScaleInput
+    fat: MakroNutriScaleInput
+    warnings: list[str] = Field(default_factory=list)
+    energyMethod: Optional[str] = Field(default=None, description="EstimatedEnergy.method dari nutri-calc.ts")
+
+
+class AsesmenNutriScaleInput(BaseModel):
+    """
+    Hasil asesmen antropometri resmi dari NutriScale (nutritional-assessment.ts).
+    AI hanya membaca data ini (BMI, HAZ, WHZ, status gizi) tanpa menghitung ulang.
+    """
+    bmi: float = Field(..., ge=0, description="Indeks Massa Tubuh (BMI)")
+    haz: Optional[float] = Field(default=0.0, description="WHO Height-for-Age Z-Score")
+    whz: Optional[float] = Field(default=0.0, description="WHO Weight-for-Height Z-Score")
+    statusNutrisi: str = Field(default="Normal", description="Klasifikasi status gizi Kemenkes/WHO")
+
+
 class ProfilKesehatanInput(BaseModel):
     umur: int = Field(..., gt=0, description="Umur pasien dalam tahun")
     jenisKelamin: str = Field(..., pattern="^(LAKI_LAKI|PEREMPUAN)$")
@@ -78,8 +133,11 @@ class ProfilKesehatanInput(BaseModel):
         pattern="^(UMUM|ANAK_BALITA|IBU_HAMIL|PASCA_OPERASI)$"
     )
     usiaKehamilanMinggu: Optional[int] = Field(default=None, ge=1, le=42)
-    anjuranKaloriDokter: Optional[int] = Field(default=None, gt=0)
     pantanganMedis: Optional[str] = Field(default="")
+    # Tier 1: target gizi WAJIB berasal dari perhitungan NutriScale
+    nutrisi: NutrisiNutriScaleInput
+    # Asesmen antropometri resmi NutriScale (BMI, HAZ, WHZ, status gizi)
+    asesmen: Optional[AsesmenNutriScaleInput] = None
 
     class Config:
         json_schema_extra = {
@@ -90,8 +148,16 @@ class ProfilKesehatanInput(BaseModel):
                 "tinggiBadan": 162.0,
                 "kategoriKondisi": "IBU_HAMIL",
                 "usiaKehamilanMinggu": 32,
-                "anjuranKaloriDokter": None,
-                "pantanganMedis": "Udang, Ikan"
+                "pantanganMedis": "Udang, Ikan",
+                "nutrisi": {
+                    "lifeStage": "pregnantAdult",
+                    "calories": 2448,
+                    "carbohydrates": {"percent": 50, "grams": 306.0},
+                    "protein": {"percent": 20, "grams": 122.4},
+                    "fat": {"percent": 30, "grams": 81.6},
+                    "warnings": [],
+                    "energyMethod": "DRI 2023 EER kehamilan trimester 3"
+                }
             }
         }
 
@@ -110,7 +176,7 @@ async def sync_dataset(request: Request, api_key: str = Security(verify_api_key)
     """
     global df_dataset, scaler_dict
     
-    api_url = os.environ.get("NEXT_PUBLIC_APP_URL", "http://localhost:3000") + "/api/products"
+    api_url = os.environ.get("NEXT_PUBLIC_APP_URL", "http://localhost:3000").rstrip("/") + "/api/products"
     print(f"\n[API Sync] Memuat ulang Dataset Makanan dari {api_url}...")
     
     try:
@@ -162,10 +228,14 @@ async def get_dietary_recommendation(
     except HTTPException:
         # Re-raise explicit HTTP Exception
         raise
+    except NutriScaleDataError as e:
+        # Data gizi dari NutriScale tidak valid — aman ditampilkan (tidak ada traceback)
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         # Exception Hiding (mencegah leak traceback intern)
         print(f"[ERROR /api/recommend] Internal Exception Blocked: {e}")
         raise HTTPException(status_code=500, detail="Internal server error occurred when processing AI Matrix.")
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("api:app", host="0.0.0.0", port=port)
