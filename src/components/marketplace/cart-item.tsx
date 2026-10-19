@@ -1,5 +1,10 @@
+'use client';
+
+import { getProductImageCandidates } from '@/lib/image';
 import { CartItem as CartItemType } from '@/types/marketplace';
 import { Minus, Plus, X } from 'lucide-react';
+import Image from 'next/image';
+import { useMemo, useState } from 'react';
 
 interface CartItemProps {
   item: CartItemType;
@@ -12,10 +17,31 @@ export default function CartItem({
   updateQuantity,
   removeFromCart,
 }: CartItemProps) {
+  const candidates = useMemo(
+    () => getProductImageCandidates(item.image, item.name),
+    [item.image, item.name],
+  );
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const currentImageUrl = candidates[candidateIndex] || null;
+
   return (
     <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/50 border border-gray-100 transition-all hover:bg-white hover:shadow-md group">
-      <div className="bg-white rounded-xl w-14 h-14 flex items-center justify-center shrink-0 border border-gray-100 shadow-sm group-hover:scale-105 transition-transform">
-        <span className="text-3xl">{item.image}</span>
+      <div className="bg-white rounded-xl w-14 h-14 relative flex items-center justify-center shrink-0 border border-gray-100 shadow-sm overflow-hidden group-hover:scale-105 transition-transform">
+        {currentImageUrl ? (
+          <Image
+            src={currentImageUrl}
+            alt={item.name || 'Produk'}
+            fill
+            unoptimized
+            sizes="56px"
+            className="object-cover"
+            onError={() => {
+              setCandidateIndex((prev) => prev + 1);
+            }}
+          />
+        ) : (
+          <span className="text-3xl">{item.image || '🥗'}</span>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">

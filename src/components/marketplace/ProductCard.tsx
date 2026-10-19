@@ -1,5 +1,8 @@
 'use client';
+import { getProductImageUrl } from '@/lib/image';
 import { Product } from '@/types/marketplace';
+import Image from 'next/image';
+import { useState } from 'react';
 
 export function ProductCard({
   product,
@@ -8,10 +11,26 @@ export function ProductCard({
   product: Product;
   onAddToCart: (p: Product) => void;
 }) {
+  const [imageError, setImageError] = useState(false);
+  const imageUrl = getProductImageUrl(product.image, product.name);
+  const showImage = Boolean(imageUrl && !imageError);
+
   return (
     <div className="bg-white relative z-10 rounded-[2rem] p-5 shadow-sm border border-gray-50 flex flex-col gap-3 hover:shadow-md transition-all">
-      <div className="bg-gray-50 rounded-2xl h-40 flex items-center justify-center text-5xl p-4">
-        {product.image}
+      <div className="bg-gray-50 rounded-2xl h-40 relative flex items-center justify-center text-5xl p-4 overflow-hidden">
+        {showImage && imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={product.name || 'Produk'}
+            fill
+            unoptimized
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover transition-transform duration-500 hover:scale-105"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          product.image || '🥗'
+        )}
       </div>
 
       <div className="flex gap-1.5 flex-wrap">

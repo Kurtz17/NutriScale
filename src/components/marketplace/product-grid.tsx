@@ -25,8 +25,13 @@ export default function ProductGrid({ products, onAdd }: ProductGridProps) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} onAdd={onAdd} />
+      {products.map((product, index) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          onAdd={onAdd}
+          priority={index < 4}
+        />
       ))}
     </div>
   );
