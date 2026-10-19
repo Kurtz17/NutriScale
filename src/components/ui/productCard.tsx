@@ -1,25 +1,52 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { getProductImageCandidates } from '@/lib/image';
 import { Product } from '@/types/marketplace';
-import React from 'react';
+import Image from 'next/image';
+import React, { useMemo, useState } from 'react';
 
 const ProductCard: React.FC<{
   product: Product;
   onAdd: (product: Product) => void;
-}> = ({ product, onAdd }) => {
+  priority?: boolean;
+}> = ({ product, onAdd, priority = false }) => {
+  const candidates = useMemo(
+    () => getProductImageCandidates(product.image, product.name),
+    [product.image, product.name],
+  );
+  const [candidateIndex, setCandidateIndex] = useState(0);
+
   const stok = product.stok;
   const outOfStock = stok !== null && stok <= 0;
   const lowStock = stok !== null && stok > 0 && stok <= 5;
+
+  const currentImageUrl = candidates[candidateIndex] || null;
 
   return (
     <Card className="rounded-3xl border-none shadow-sm flex flex-col gap-4 p-4 bg-white">
       <CardContent className="p-0">
         <div className="flex justify-center relative">
-          <div className="bg-gray-50 rounded-2xl w-full flex items-center justify-center py-8 border border-gray-100">
-            <span className="text-6xl transition-transform duration-500 group-hover:scale-110">
-              {product.image}
-            </span>
+          <div className="bg-gray-50 rounded-2xl w-full h-44 relative flex items-center justify-center overflow-hidden border border-gray-100">
+            {currentImageUrl ? (
+              <Image
+                src={currentImageUrl}
+                alt={product.name || 'Produk'}
+                fill
+                unoptimized
+                priority={priority}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={() => {
+                  // Coba kandidat ekstensi berikutnya (.jpeg -> .jpg -> .png -> .webp)
+                  setCandidateIndex((prev) => prev + 1);
+                }}
+              />
+            ) : (
+              <span className="text-6xl transition-transform duration-500 group-hover:scale-110">
+                {product.image || '🥗'}
+              </span>
+            )}
           </div>
           {/* Badge Stok */}
           {stok !== null && (
