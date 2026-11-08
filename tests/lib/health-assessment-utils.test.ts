@@ -1,12 +1,30 @@
 import {
   formatPantanganMedis,
+  formatTeksOpsional,
   formatUsiaKehamilan,
+  gabungPantanganAI,
   mapCategory,
   mapGender,
 } from '@/lib/health-assessment-utils';
 import { describe, expect, it } from 'vitest';
 
 describe('health assessment utils', () => {
+  it('should tidy optional allergy / restriction text and turn empty into null', () => {
+    expect(formatTeksOpsional('  Udang,   Kacang  ')).toBe('Udang, Kacang');
+    expect(formatTeksOpsional('   ')).toBeNull();
+    expect(formatTeksOpsional(undefined)).toBeNull();
+    expect(formatTeksOpsional(null)).toBeNull();
+  });
+
+  it('should combine user restrictions and doctor restrictions for the AI engine', () => {
+    expect(gabungPantanganAI('Pedas', 'Tinggi Gula, MSG')).toBe(
+      'Pedas, Tinggi Gula, MSG',
+    );
+    expect(gabungPantanganAI(null, 'Tinggi Gula')).toBe('Tinggi Gula');
+    expect(gabungPantanganAI('Pedas', null)).toBe('Pedas');
+    expect(gabungPantanganAI(null, null)).toBe('');
+  });
+
   it('should map UI gender values to Prisma enum values', () => {
     expect(mapGender('female')).toBe('PEREMPUAN');
     expect(mapGender('male')).toBe('LAKI_LAKI');

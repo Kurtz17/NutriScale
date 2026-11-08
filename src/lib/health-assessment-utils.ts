@@ -26,6 +26,20 @@ export function formatPantanganMedis(formData: HealthFormData): string | null {
     : null;
 }
 
+/** Teks bebas dari form: dirapikan, kosong -> null (dipakai untuk kolom alergi & pantangan). */
+export function formatTeksOpsional(value?: string | null): string | null {
+  const teks = (value ?? '').replace(/\s+/g, ' ').trim();
+  return teks === '' ? null : teks;
+}
+
+/** Pantangan untuk AI engine: pantangan tipe makanan user + larangan dokter (pasca operasi). */
+export function gabungPantanganAI(
+  pantangan: string | null,
+  pantanganMedis: string | null,
+): string {
+  return [pantangan, pantanganMedis].filter(Boolean).join(', ');
+}
+
 export function formatUsiaKehamilan(formData: HealthFormData): number | null {
   return formData.category === 'ibu_hamil' && formData.gestasi !== ''
     ? Number(formData.gestasi)

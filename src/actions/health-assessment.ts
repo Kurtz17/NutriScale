@@ -3,7 +3,9 @@
 import { JenisKelamin, Prisma } from '@/app/generated/prisma/client';
 import {
   formatPantanganMedis,
+  formatTeksOpsional,
   formatUsiaKehamilan,
+  gabungPantanganAI,
   mapCategory,
   mapGender,
 } from '@/lib/health-assessment-utils';
@@ -25,6 +27,8 @@ export async function saveHealthAssessment(
     const kategoriKondisi = mapCategory(formData.category);
     const pantanganMedis = formatPantanganMedis(formData);
     const usiaKehamilanMinggu = formatUsiaKehamilan(formData);
+    const alergi = formatTeksOpsional(formData.allergies);
+    const pantangan = formatTeksOpsional(formData.dietaryRestrictions);
 
     const anjuranKaloriDokter =
       formData.kalori !== '' &&
@@ -58,6 +62,8 @@ export async function saveHealthAssessment(
           usiaKehamilanMinggu,
           anjuranKaloriDokter,
           pantanganMedis,
+          alergi,
+          pantangan,
         },
       });
     } else {
@@ -74,6 +80,8 @@ export async function saveHealthAssessment(
           usiaKehamilanMinggu,
           anjuranKaloriDokter,
           pantanganMedis,
+          alergi,
+          pantangan,
         },
       });
     }
@@ -158,7 +166,8 @@ export async function saveHealthAssessment(
               tinggiBadan,
               kategoriKondisi,
               usiaKehamilanMinggu,
-              pantanganMedis,
+              pantanganMedis: gabungPantanganAI(pantangan, pantanganMedis),
+              alergi: alergi ?? '',
               nutrisi: {
                 lifeStage: targetNutrisi.lifeStage,
                 calories: targetNutrisi.calories,

@@ -62,6 +62,53 @@ describe('Server Action: saveHealthAssessment', () => {
     );
   });
 
+  it('should save allergies and restrictions and send them to the AI engine', async () => {
+    vi.stubEnv('AI_ENGINE_URL', 'http://ai-engine.test');
+    vi.mocked(prisma.profilKesehatan.findFirst).mockResolvedValue(null);
+    vi.mocked(fetch).mockResolvedValue({ ok: false, status: 503 } as never);
+
+    const result = await saveHealthAssessment(
+      {
+        ...MOCK_FORM_DATA,
+        allergies: ' Udang,  Susu ',
+        dietaryRestrictions: 'Pedas',
+      } as never,
+      'user_123',
+    );
+
+    expect(result.success).toBe(true);
+    expect(prisma.profilKesehatan.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          alergi: 'Udang, Susu',
+          pantangan: 'Pedas',
+        }),
+      }),
+    );
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string);
+    expect(body.alergi).toBe('Udang, Susu');
+    expect(body.pantanganMedis).toBe('Pedas');
+    vi.unstubAllEnvs();
+  });
+
+  it('should store null when allergies and restrictions are empty', async () => {
+    vi.mocked(prisma.profilKesehatan.findFirst).mockResolvedValue({
+      id: 'prof_123',
+    } as never);
+    vi.mocked(fetch).mockRejectedValue(new Error('AI down'));
+
+    await saveHealthAssessment(
+      { ...MOCK_FORM_DATA, allergies: '  ', dietaryRestrictions: '' } as never,
+      'user_123',
+    );
+
+    expect(prisma.profilKesehatan.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ alergi: null, pantangan: null }),
+      }),
+    );
+  });
+
   it('should update existing profile and save anjuranKaloriDokter even if AI is offline', async () => {
     vi.mocked(prisma.profilKesehatan.findFirst).mockResolvedValue({
       id: 'prof_123',

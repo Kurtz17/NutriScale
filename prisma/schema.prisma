@@ -133,6 +133,8 @@ model ProfilKesehatan {
   usiaKehamilanMinggu Int?             @map("usia_kehamilan_minggu")
   anjuranKaloriDokter Int?             @map("anjuran_kalori_dokter")
   pantanganMedis      String?          @map("pantangan_medis")
+  alergi              String?
+  pantangan           String?
   updatedAt           DateTime         @default(now()) @map("updated_at")
 
   riwayatAnalisis     RiwayatAnalisis[]
