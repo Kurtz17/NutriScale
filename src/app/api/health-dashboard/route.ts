@@ -1,4 +1,5 @@
 import { auth } from '@/lib/auth';
+import { computeTargetNutrition } from '@/lib/nutrition/compute-target';
 import prisma from '@/lib/prisma';
 import { FoodItem, Meal, MealPlanDetail, Stat } from '@/types/health-dashboard';
 import { headers } from 'next/headers';
@@ -43,14 +44,35 @@ export async function GET() {
       const mealPlanDetail = latest.mealPlan
         ?.detailRencanaMakan as unknown as MealPlanDetail;
 
-      const targetCalories =
+      let targetCalories =
         mealPlanDetail?.target_kalori_harian ||
         profile.anjuranKaloriDokter ||
         0;
-      const targetProtein = mealPlanDetail?.distribusi?.protein_g || 0;
-      const targetCarbs = mealPlanDetail?.distribusi?.carbs_g || 0;
-      const targetFat = mealPlanDetail?.distribusi?.fat_g || 0;
+      let targetProtein = mealPlanDetail?.distribusi?.protein_g || 0;
+      let targetCarbs = mealPlanDetail?.distribusi?.carbs_g || 0;
+      let targetFat = mealPlanDetail?.distribusi?.fat_g || 0;
       const narasiAI = mealPlanDetail?.narasiAI || '';
+
+      // Fallback lokal dengan nutri-calc jika target belum ada di mealPlan
+      if (
+        (!targetCalories || (!targetProtein && !targetCarbs && !targetFat)) &&
+        profile.beratBadan &&
+        profile.tinggiBadan
+      ) {
+        const computed = computeTargetNutrition({
+          sex: profile.jenisKelamin,
+          ageYears: profile.umur ?? 25,
+          weightKg: Number(profile.beratBadan),
+          heightCm: Number(profile.tinggiBadan),
+          category: profile.kategoriKondisi,
+          gestationalWeeks: profile.usiaKehamilanMinggu ?? undefined,
+          anjuranKaloriDokter: profile.anjuranKaloriDokter,
+        });
+        if (!targetCalories) targetCalories = computed.calories;
+        if (!targetProtein) targetProtein = computed.protein.grams;
+        if (!targetCarbs) targetCarbs = computed.carbohydrates.grams;
+        if (!targetFat) targetFat = computed.fat.grams;
+      }
 
       // Meal sessions config
       const sessions = [

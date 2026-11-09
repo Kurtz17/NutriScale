@@ -7,7 +7,11 @@
 ARSITEKTUR:
   Layer 1 — ML Preprocessing  : TF-IDF + StandardScaler + cosine similarity
                                   content-based filtering per profil gizi
-  Layer 2 — Nutritional Expert : BMI/Z-score WHO, Mifflin-St Jeor TDEE
+  Layer 2 — Tier 1 Data Intake : Ambil target kalori, karbohidrat, protein, lemak
+                                  HASIL PERHITUNGAN NutriScale (nutri-calc.ts).
+                                  AI TIDAK menghitung kebutuhan gizi sendiri, sehingga
+                                  NutriScale tetap berfungsi walau AI sedang mati.
+                                  (+ asesmen BMI/Z-score CDC/WHO untuk status gizi)
   Layer 3 — Gemini LLM         : Narasi rekomendasi personal berbahasa Indonesia
                                   (via google-generativeai SDK)
   Layer 4 — Output Mapper      : Strict mapping ke Prisma schema
@@ -29,6 +33,8 @@ from typing import Optional
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+
 
 warnings.filterwarnings('ignore')
 
@@ -55,13 +61,6 @@ ALCOHOL_KEYWORDS: list[str] = [
     'brandy', 'champagne', 'liqueur', 'bourbon', 'scotch', 'ale', 'cocktail', 'stout', 'lager',
 ]
 
-# Makro distribusi per kondisi (protein/fat/carbs sebagai rasio kalori)
-MACRO_DISTRIBUTION: dict[str, dict[str, float]] = {
-    'UMUM':          {'protein': 0.15, 'fat': 0.25, 'carbs': 0.60},
-    'ANAK_BALITA':   {'protein': 0.15, 'fat': 0.30, 'carbs': 0.55},
-    'IBU_HAMIL':     {'protein': 0.20, 'fat': 0.25, 'carbs': 0.55},
-    'PASCA_OPERASI': {'protein': 0.25, 'fat': 0.20, 'carbs': 0.55},
-}
 
 # Bobot fitur untuk content-based scoring per kondisi
 FEATURE_WEIGHTS: dict[str, dict[str, float]] = {
@@ -175,7 +174,7 @@ def load_and_preprocess_api_data(api_url: str) -> tuple[pd.DataFrame, dict]:
     """
     print(f"[Pipeline] Fetching data from {api_url}...")
     try:
-        response = requests.get(api_url)
+        response = requests.get(api_url, timeout=10)
         response.raise_for_status()
         res_json = response.json()
         
@@ -186,9 +185,24 @@ def load_and_preprocess_api_data(api_url: str) -> tuple[pd.DataFrame, dict]:
             data = res_json
             
     except Exception as e:
-        print(f"[Pipeline Error] Gagal fetch API: {e}")
-        # Kembalikan dataframe kosong jika gagal
-        return pd.DataFrame(), {}
+        print(f"[Pipeline Error] Gagal fetch API ({e}). Memuat fallback dataset lokal data/nutrition.csv...")
+        csv_fallback = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'nutrition.csv')
+        if os.path.exists(csv_fallback):
+            df_csv = pd.read_csv(csv_fallback)
+            df_csv = df_csv.dropna(subset=['name'])
+            expected_csv_cols = ['calories', 'total_fat', 'protein', 'carbohydrate', 'sodium', 'cholesterol', 'sugars']
+            for col in expected_csv_cols:
+                if col in df_csv.columns:
+                    df_csv[col] = df_csv[col].apply(extract_numeric)
+                else:
+                    df_csv[col] = 0.0
+            if 'fat' in df_csv.columns:
+                df_csv = df_csv.drop(columns=['fat'])
+            df_csv = df_csv.rename(columns={'carbohydrate': 'carbs', 'total_fat': 'fat'})
+            data = df_csv.to_dict('records')
+        else:
+            # Kembalikan dataframe kosong jika gagal dan tidak ada CSV lokal
+            return pd.DataFrame(), {}
         
     if isinstance(data, dict) and 'products' in data:
         data = data['products']
@@ -253,113 +267,170 @@ def load_and_preprocess_api_data(api_url: str) -> tuple[pd.DataFrame, dict]:
     return df.reset_index(drop=True), scalers
 
 
+# Backward compatibility alias
+load_and_preprocess_kaggle_data = load_and_preprocess_api_data
+
+
 # ==========================================================================
-# [3.3.4] MODEL DAN ARSITEKTUR — LAYER 1: EXPERT SYSTEM (WHO Z-SCORE)
+# [3.3.4] MODEL DAN ARSITEKTUR — LAYER 1: ASESMEN ANTROPOMETRI NUTRISCALE
 # ==========================================================================
 
-# Referensi BMI-for-age median (CDC/WHO, disederhanakan)
-_CHILD_BMI_MEDIAN = {
-    2: 16.4, 3: 15.9, 4: 15.6, 5: 15.5, 6: 15.5, 7: 15.7,
-    8: 15.9, 9: 16.3, 10: 16.7, 11: 17.2, 12: 17.7, 13: 18.4,
-    14: 19.0, 15: 19.6, 16: 20.2, 17: 20.7, 18: 21.2,
-}
-
-
-def calculate_bmi(weight_kg: float, height_cm: float) -> float:
-    h = height_cm / 100.0
-    return round(weight_kg / (h ** 2), 2) if h > 0 else 0.0
-
-
-def assess_nutritional_status(umur, jenisKelamin, beratBadan, tinggiBadan, kategori) -> dict:
+def ambil_data_asesmen_nutriscale(profil_kesehatan_dict: dict) -> dict:
     """
-    Asesmen status gizi sesuai standar CDC.
-    Adults: >= 20 years. Children/Teens: 2-19 years.
-    Output strict mapping ke Prisma RiwayatAnalisis schema.
+    Tier 1 — HANYA mengambil data asesmen antropometri (BMI, HAZ, WHZ, status nutrisi)
+    hasil perhitungan resmi NutriScale (src/lib/nutrition/nutritional-assessment.ts).
+    AI tidak menghitung ulang BMI atau status gizi sendiri (Zero Logic Duplication).
     """
-    umur = int(umur or 20)
-    bmi  = calculate_bmi(float(beratBadan), float(tinggiBadan))
+    asesmen = profil_kesehatan_dict.get('asesmen')
+    if not asesmen and isinstance(profil_kesehatan_dict.get('nutrisi'), dict):
+        nutrisi_obj = profil_kesehatan_dict['nutrisi']
+        if 'statusNutrisi' in nutrisi_obj or 'bmi' in nutrisi_obj:
+            asesmen = nutrisi_obj
 
-    # CDC: BMI is not accurate for pregnant women.
-    if kategori == 'IBU_HAMIL':
-        return {'bmi': bmi, 'haz': 0.0, 'whz': 0.0, 'lila': None, 'statusNutrisi': 'Pregnant (Monitoring)'}
+    if not isinstance(asesmen, dict) or not asesmen:
+        raise NutriScaleDataError(
+            "Data asesmen antropometri NutriScale ('asesmen') wajib dikirim. "
+            "AI tidak menghitung BMI atau status nutrisi sendiri."
+        )
 
-    # Anak Balita atau Child/Teen (<= 18 tahun)
-    if umur <= 18 or kategori == 'ANAK_BALITA':
-        # CDC Child/Teen percentiles approximated via Z-scores:
-        # < 5th percentile (~ z < -1.645) -> Underweight
-        # 5th to < 85th percentile -> Healthy Weight (Normal)
-        # 85th to < 95th percentile (~ z >= 1.036) -> Overweight
-        # >= 95th percentile (~ z >= 1.645) -> Obese
-        median = _CHILD_BMI_MEDIAN.get(umur, 16.5 + 0.5 * max(0, umur - 5))
-        sd     = median * 0.12
-        z      = round((bmi - median) / sd, 2) if sd > 0 else 0.0
+    try:
+        bmi_val = float(asesmen.get('bmi', 0.0))
+    except (TypeError, ValueError):
+        raise NutriScaleDataError("Data NutriScale 'asesmen.bmi' wajib berupa angka.")
 
-        if z < -1.645:   status = "Underweight"
-        elif z < 1.036:  status = "Normal"
-        elif z < 1.645:  status = "Overweight"
-        else:            status = "Obese"
+    if not np.isfinite(bmi_val) or bmi_val < 0:
+        raise NutriScaleDataError(f"Data NutriScale 'asesmen.bmi' harus >= 0, diterima: {asesmen.get('bmi')}.")
 
-        return {'bmi': bmi, 'haz': z, 'whz': z, 'lila': None, 'statusNutrisi': status}
+    haz_val = asesmen.get('haz')
+    whz_val = asesmen.get('whz')
 
-    else:
-        # CDC Adult BMI (> 18 years old)
-        if bmi < 18.5:   status = "Underweight"
-        elif bmi < 25.0: status = "Normal"
-        elif bmi < 30.0: status = "Overweight"
-        else:            status = "Obese"
+    try:
+        haz_float = float(haz_val) if haz_val is not None else 0.0
+    except (TypeError, ValueError):
+        haz_float = 0.0
 
-        return {'bmi': bmi, 'haz': 0.0, 'whz': 0.0, 'lila': None, 'statusNutrisi': status}
+    try:
+        whz_float = float(whz_val) if whz_val is not None else 0.0
+    except (TypeError, ValueError):
+        whz_float = 0.0
 
+    status_nutrisi = str(asesmen.get('statusNutrisi') or 'Normal').strip()
 
-# ==========================================================================
-# [3.3.4] MODEL DAN ARSITEKTUR — LAYER 2: CALORIC ENGINE
-# ==========================================================================
-
-def calculate_daily_calories(umur, jenisKelamin, beratBadan, tinggiBadan,
-                              kategori, status_nutrisi, usia_kehamilan, anjuran_dokter) -> dict:
-    umur = int(umur or 20)
-    bb = float(beratBadan)
-    tb = float(tinggiBadan)
-
-    if anjuran_dokter and float(anjuran_dokter) > 0:
-        tdee = float(anjuran_dokter)
-    else:
-        # Mifflin-St Jeor BMR
-        if jenisKelamin == 'LAKI_LAKI':
-            bmr = (10 * bb) + (6.25 * tb) - (5 * umur) + 5
-        else:
-            bmr = (10 * bb) + (6.25 * tb) - (5 * umur) - 161
-
-        # Activity factor: sedentary default
-        tdee = bmr * 1.375  # light activity
-
-        # Koreksi status gizi
-        adjustments = {
-            "Underweight":          +500,
-            "Overweight":           -300,
-            "Obese":                -500,
-        }
-        tdee += adjustments.get(status_nutrisi, 0)
-
-        # Koreksi kondisi khusus
-        if kategori == 'IBU_HAMIL' and usia_kehamilan:
-            weeks = int(usia_kehamilan)
-            tdee += 340 if 14 <= weeks <= 27 else (452 if weeks >= 28 else 180)
-        elif kategori == 'PASCA_OPERASI':
-            tdee += 400  # hypermetabolism pasca operasi
-
-        # Koreksi anak balita (kebutuhan lebih rendah secara absolut)
-        if kategori == 'ANAK_BALITA' and umur < 6:
-            tdee = min(tdee, 1600)
-
-    dist = MACRO_DISTRIBUTION.get(kategori, MACRO_DISTRIBUTION['UMUM'])
     return {
-        'target_kalori_harian': round(tdee, 1),
-        'distribusi': {
-            'protein_g': round((dist['protein'] * tdee) / 4, 1),
-            'fat_g':     round((dist['fat']     * tdee) / 9, 1),
-            'carbs_g':   round((dist['carbs']   * tdee) / 4, 1),
+        'bmi': round(bmi_val, 2),
+        'haz': round(haz_float, 2),
+        'whz': round(whz_float, 2),
+        'lila': None,
+        'statusNutrisi': status_nutrisi,
+        '_source': NUTRISCALE_SOURCE,
+    }
+
+
+# ==========================================================================
+# [3.3.4] MODEL DAN ARSITEKTUR — LAYER 2: TIER 1 DATA INTAKE DARI NUTRISCALE
+# ==========================================================================
+
+KCAL_PER_G_CARBS = 4.0
+KCAL_PER_G_PROTEIN = 4.0
+KCAL_PER_G_FAT = 9.0
+
+# Toleransi selisih Atwater (4C + 4P + 9F vs total kalori). nutri-calc.ts
+# membulatkan gram ke 1 desimal, jadi selisih wajar sangat kecil. Selisih besar
+# menandakan data rusak / satuan salah, bukan pembulatan.
+ATWATER_TOLERANCE_RATIO = 0.05
+
+NUTRISCALE_SOURCE = 'NUTRISCALE_NUTRI_CALC'
+
+
+class NutriScaleDataError(ValueError):
+    """Data hasil perhitungan gizi dari NutriScale tidak ada atau tidak valid."""
+
+
+def _read_macro_grams(nutrisi: dict, key: str) -> float:
+    """Baca gram makro dari bentuk MacroResult nutri-calc.ts: { key: { grams, percent } }."""
+    macro = nutrisi.get(key)
+    grams = macro.get('grams') if isinstance(macro, dict) else None
+    try:
+        value = float(grams)
+    except (TypeError, ValueError):
+        raise NutriScaleDataError(f"Data NutriScale '{key}.grams' wajib berupa angka.")
+    if not np.isfinite(value) or value < 0:
+        raise NutriScaleDataError(f"Data NutriScale '{key}.grams' harus >= 0, diterima: {grams}.")
+    return value
+
+
+def _read_macro_percent(nutrisi: dict, key: str) -> Optional[float]:
+    macro = nutrisi.get(key)
+    percent = macro.get('percent') if isinstance(macro, dict) else None
+    return float(percent) if isinstance(percent, (int, float)) else None
+
+
+def ambil_data_nutrisi_nutriscale(nutrisi: Optional[dict]) -> dict:
+    """
+    Tier 1 — HANYA mengambil data target gizi harian hasil perhitungan NutriScale
+    (output `calculateMacros` di nutri-calc.ts). Tidak ada rumus energi/makro di sini.
+
+    Bentuk input (MacroResult nutri-calc.ts):
+        {
+          'lifeStage': 'adult19Plus',
+          'calories': 2000,
+          'carbohydrates': {'percent': 50, 'grams': 250.0},
+          'protein':       {'percent': 20, 'grams': 100.0},
+          'fat':           {'percent': 30, 'grams': 66.7},
+          'warnings': [],
+          'energyMethod': 'Harris-Benedict revisi 1984 × Activity Factor'  # opsional
         }
+
+    Output dipetakan ke struktur internal yang dipakai Tier 2 (recommender):
+        { 'target_kalori_harian', 'distribusi': {protein_g, fat_g, carbs_g}, 'tier1_details' }
+    """
+    if not isinstance(nutrisi, dict) or not nutrisi:
+        raise NutriScaleDataError(
+            "Data perhitungan gizi NutriScale ('nutrisi') wajib dikirim. "
+            "AI tidak menghitung kebutuhan kalori/makro sendiri."
+        )
+
+    try:
+        calories = float(nutrisi.get('calories'))
+    except (TypeError, ValueError):
+        raise NutriScaleDataError("Data NutriScale 'calories' wajib berupa angka.")
+    if not np.isfinite(calories) or calories <= 0:
+        raise NutriScaleDataError(f"Data NutriScale 'calories' harus > 0, diterima: {nutrisi.get('calories')}.")
+
+    carbs_g = _read_macro_grams(nutrisi, 'carbohydrates')
+    protein_g = _read_macro_grams(nutrisi, 'protein')
+    fat_g = _read_macro_grams(nutrisi, 'fat')
+
+    # Guardrail integritas data (validasi, bukan perhitungan ulang target).
+    atwater_kcal = carbs_g * KCAL_PER_G_CARBS + protein_g * KCAL_PER_G_PROTEIN + fat_g * KCAL_PER_G_FAT
+    diff_kcal = abs(atwater_kcal - calories)
+    if diff_kcal > calories * ATWATER_TOLERANCE_RATIO:
+        raise NutriScaleDataError(
+            f"Data NutriScale tidak konsisten: makro setara {atwater_kcal:.1f} kkal, "
+            f"sedangkan calories {calories:.1f} kkal."
+        )
+
+    warnings_list = nutrisi.get('warnings') or []
+
+    return {
+        'target_kalori_harian': round(calories, 1),
+        'distribusi': {
+            'protein_g': round(protein_g, 1),
+            'fat_g':     round(fat_g, 1),
+            'carbs_g':   round(carbs_g, 1),
+        },
+        'tier1_details': {
+            'sumber': NUTRISCALE_SOURCE,
+            'life_stage': nutrisi.get('lifeStage'),
+            'energy_method': nutrisi.get('energyMethod'),
+            'macro_percentages': {
+                'carbs':   _read_macro_percent(nutrisi, 'carbohydrates'),
+                'protein': _read_macro_percent(nutrisi, 'protein'),
+                'fat':     _read_macro_percent(nutrisi, 'fat'),
+            },
+            'warnings': [str(w) for w in warnings_list if w],
+            'energy_conservation_diff_kcal': round(diff_kcal, 2),
+        },
     }
 
 
@@ -705,7 +776,8 @@ def jalankan_ai_rekomendasi(
     ENTRYPOINT UTAMA NutriScale AI Engine v2.
 
     Parameter:
-        profil_kesehatan_dict : dict sesuai Prisma model ProfilKesehatan
+        profil_kesehatan_dict : dict sesuai Prisma model ProfilKesehatan, WAJIB berisi
+                                key 'nutrisi' = MacroResult hasil nutri-calc.ts NutriScale
         dataset_dataframe     : pd.DataFrame hasil load_and_preprocess_api_data()
         use_llm               : aktifkan Gemini narasi (butuh GEMINI_API_KEY)
 
@@ -718,24 +790,20 @@ def jalankan_ai_rekomendasi(
     bb          = profil_kesehatan_dict.get('beratBadan', 0)
     tb          = profil_kesehatan_dict.get('tinggiBadan', 0)
     kategori    = profil_kesehatan_dict.get('kategoriKondisi', 'UMUM')
-    usia_hamil  = profil_kesehatan_dict.get('usiaKehamilanMinggu')
-    anjuran_dr  = profil_kesehatan_dict.get('anjuranKaloriDokter')
-    
+
     # [GUARDRAIL] Sanitize input mencegah Prompt Injection NLP
     pantangan_raw = str(profil_kesehatan_dict.get('pantanganMedis', '') or '')
     pantangan   = re.sub(r'[^\w\s\,-]', '', pantangan_raw)[:100].strip()
 
-    # --- Layer 1: Asesmen Gizi ---
-    riwayat  = assess_nutritional_status(umur, jk, bb, tb, kategori)
+    # --- Layer 2 (Tier 1): Ambil target gizi & asesmen hasil perhitungan NutriScale (tanpa hitung ulang) ---
+    kalori   = ambil_data_nutrisi_nutriscale(profil_kesehatan_dict.get('nutrisi'))
+    riwayat  = ambil_data_asesmen_nutriscale(profil_kesehatan_dict)
 
-    # --- Layer 2: Kalori + Makro ---
-    kalori   = calculate_daily_calories(umur, jk, bb, tb, kategori, riwayat['statusNutrisi'], usia_hamil, anjuran_dr)
-
-    # --- Layer 3: ML Filtering + Content-Based Recommendation ---
+    # --- Layer 3: ML Filtering + Content-Based Recommendation (Tier 2) ---
     df_filtered    = filter_dataset(dataset_dataframe, pantangan, kategori)
     rencana_makan  = build_meal_plan(kalori, df_filtered, kategori, scaler_dict)
 
-    # --- Layer 4: LLM Narasi (Gemini) ---
+    # --- Layer 4: LLM Narasi (Gemini) (Tier 3) ---
     narasi_ai = ""
     if use_llm:
         narasi_ai = generate_llm_narasi(
@@ -753,10 +821,13 @@ def jalankan_ai_rekomendasi(
         'meal_plan': {
             'detailRencanaMakan': rencana_makan,
         },
-        # Debug info (bisa dihapus di produksi)
+        # Debug & Tier 1 Traceability Meta
         '_meta': {
             'total_kandidat_makanan': len(df_filtered),
             'kategori': kategori,
             'pantangan_terdeteksi': [p.strip() for p in pantangan.split(',') if p.strip()],
+            'sumber_target_gizi': NUTRISCALE_SOURCE,
+            'sumber_asesmen_antropometri': riwayat.get('_source', 'LOCAL_FALLBACK'),
+            'tier1_details': kalori.get('tier1_details', {}),
         }
     }

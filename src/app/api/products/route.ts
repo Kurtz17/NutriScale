@@ -1,4 +1,5 @@
 import { auth } from '@/lib/auth';
+import { computeTargetNutrition } from '@/lib/nutrition/compute-target';
 import prisma from '@/lib/prisma';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -24,36 +25,52 @@ export async function GET() {
         },
       });
 
-      if (profile && profile.riwayatAnalisis.length > 0) {
-        const latest = profile.riwayatAnalisis[0];
-        const mealPlanDetail = latest.mealPlan?.detailRencanaMakan as Record<
-          string,
-          unknown
-        >;
+      if (profile) {
+        if (profile.riwayatAnalisis.length > 0) {
+          const latest = profile.riwayatAnalisis[0];
+          const mealPlanDetail = latest.mealPlan?.detailRencanaMakan as Record<
+            string,
+            unknown
+          >;
 
-        targetCalories =
-          (mealPlanDetail?.target_kalori_harian as number) ||
-          profile.anjuranKaloriDokter ||
-          2000;
+          targetCalories =
+            (mealPlanDetail?.target_kalori_harian as number) ||
+            profile.anjuranKaloriDokter ||
+            2000;
 
-        // Extract recommended products
-        if (mealPlanDetail) {
-          const sessions = [
-            'rekomendasi_pagi',
-            'rekomendasi_snack_pagi',
-            'rekomendasi_siang',
-            'rekomendasi_snack_sore',
-            'rekomendasi_malam',
-          ];
-          sessions.forEach((s) => {
-            const foods =
-              (mealPlanDetail[s] as Array<{ produk_id?: string }>) || [];
-            foods.forEach((food) => {
-              if (food.produk_id) {
-                recommendedProductIds.add(food.produk_id);
-              }
+          // Extract recommended products
+          if (mealPlanDetail) {
+            const sessions = [
+              'rekomendasi_pagi',
+              'rekomendasi_snack_pagi',
+              'rekomendasi_siang',
+              'rekomendasi_snack_sore',
+              'rekomendasi_malam',
+            ];
+            sessions.forEach((s) => {
+              const foods =
+                (mealPlanDetail[s] as Array<{ produk_id?: string }>) || [];
+              foods.forEach((food) => {
+                if (food.produk_id) {
+                  recommendedProductIds.add(food.produk_id);
+                }
+              });
             });
+          }
+        } else if (profile.anjuranKaloriDokter) {
+          targetCalories = profile.anjuranKaloriDokter;
+        } else if (profile.beratBadan && profile.tinggiBadan) {
+          const computed = computeTargetNutrition({
+            sex: profile.jenisKelamin,
+            ageYears: profile.umur ?? 25,
+            weightKg: Number(profile.beratBadan),
+            heightCm: Number(profile.tinggiBadan),
+            category: profile.kategoriKondisi,
+            gestationalWeeks: profile.usiaKehamilanMinggu ?? undefined,
           });
+          if (computed.calories > 0) {
+            targetCalories = computed.calories;
+          }
         }
       }
     }
