@@ -2,6 +2,7 @@
 
 import { JenisKelamin, Prisma } from '@/app/generated/prisma/client';
 import {
+  ambilHasilParserAlergi,
   formatPantanganMedis,
   formatTeksOpsional,
   formatUsiaKehamilan,
@@ -168,6 +169,8 @@ export async function saveHealthAssessment(
               usiaKehamilanMinggu,
               pantanganMedis: gabungPantanganAI(pantangan, pantanganMedis),
               alergi: alergi ?? '',
+              // Hasil parser Groq sebelumnya; AI engine memakainya bila teks alergi/pantangan sama
+              parserAlergiTersimpan: existingProfile?.parserAlergi ?? null,
               nutrisi: {
                 lifeStage: targetNutrisi.lifeStage,
                 calories: targetNutrisi.calories,
@@ -190,6 +193,23 @@ export async function saveHealthAssessment(
         if (aiResponse.ok) {
           const aiResult = await aiResponse.json();
           const { riwayat_analisis, meal_plan } = aiResult.data || {};
+
+          const hasilParserAlergi = ambilHasilParserAlergi(aiResult.data);
+          if (hasilParserAlergi) {
+            try {
+              await prisma.profilKesehatan.update({
+                where: { id: targetProfilId },
+                data: {
+                  parserAlergi: hasilParserAlergi as Prisma.InputJsonValue,
+                },
+              });
+            } catch (parserError) {
+              console.warn(
+                'Gagal menyimpan hasil parser alergi (tidak memengaruhi rekomendasi):',
+                parserError,
+              );
+            }
+          }
 
           if (meal_plan?.detailRencanaMakan) {
             await prisma.mealPlan.update({

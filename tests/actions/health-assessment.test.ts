@@ -91,6 +91,58 @@ describe('Server Action: saveHealthAssessment', () => {
     vi.unstubAllEnvs();
   });
 
+  it('should send the stored parser result and save the new one from the AI engine', async () => {
+    vi.stubEnv('AI_ENGINE_URL', 'http://ai-engine.test');
+    const lama = {
+      versi: 'parser-llm-v1',
+      entri: { 'alergi ayam': { kata_kunci_en: ['chicken'] } },
+    };
+    const baru = {
+      versi: 'parser-llm-v1',
+      entri: { 'alergi udang': { grup: ['udang'] } },
+    };
+    vi.mocked(prisma.profilKesehatan.findFirst).mockResolvedValue({
+      id: 'prof_123',
+      parserAlergi: lama,
+    } as never);
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: {
+            meal_plan: { detailRencanaMakan: {} },
+            _meta: { parser_alergi: { hasil_untuk_disimpan: baru } },
+          },
+        }),
+    } as never);
+
+    const result = await saveHealthAssessment(
+      { ...MOCK_FORM_DATA, allergies: 'alergi udang' } as never,
+      'user_123',
+    );
+
+    expect(result.success).toBe(true);
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string);
+    expect(body.parserAlergiTersimpan).toEqual(lama);
+    expect(prisma.profilKesehatan.update).toHaveBeenCalledWith({
+      where: { id: 'prof_123' },
+      data: { parserAlergi: baru },
+    });
+    vi.unstubAllEnvs();
+  });
+
+  it('should send null as stored parser result for a new profile', async () => {
+    vi.stubEnv('AI_ENGINE_URL', 'http://ai-engine.test');
+    vi.mocked(prisma.profilKesehatan.findFirst).mockResolvedValue(null);
+    vi.mocked(fetch).mockResolvedValue({ ok: false, status: 503 } as never);
+
+    await saveHealthAssessment(MOCK_FORM_DATA as never, 'user_123');
+
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string);
+    expect(body.parserAlergiTersimpan).toBeNull();
+    vi.unstubAllEnvs();
+  });
+
   it('should store null when allergies and restrictions are empty', async () => {
     vi.mocked(prisma.profilKesehatan.findFirst).mockResolvedValue({
       id: 'prof_123',

@@ -135,6 +135,7 @@ model ProfilKesehatan {
   pantanganMedis      String?          @map("pantangan_medis")
   alergi              String?
   pantangan           String?
+  parserAlergi        Json?            @map("parser_alergi")
   updatedAt           DateTime         @default(now()) @map("updated_at")
 
   riwayatAnalisis     RiwayatAnalisis[]
