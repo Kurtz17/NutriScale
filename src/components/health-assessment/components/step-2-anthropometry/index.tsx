@@ -2,6 +2,10 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  getHealthLimits,
+  validateAnthropometry,
+} from '@/lib/health-assessment-limits';
 import { HealthFormData } from '@/types/health-assessment';
 import { toast } from 'sonner';
 
@@ -18,23 +22,17 @@ export default function Step2({
   formData,
   setFormData,
 }: Props) {
+  const limits = getHealthLimits(formData.category, Number(formData.age));
+
   const handleNext = () => {
     if (formData.weight === '' || formData.height === '') {
       toast.error('Semua field wajib diisi!');
       return;
     }
 
-    const weight = Number(formData.weight);
-    const height = Number(formData.height);
-
-    // 🔥 VALIDASI MASUK AKAL
-    if (weight <= 0 || weight > 300) {
-      toast.error('Berat badan harus antara 1 - 300 kg');
-      return;
-    }
-
-    if (height <= 0 || height > 250) {
-      toast.error('Tinggi badan harus antara 1 - 250 cm');
+    const error = validateAnthropometry(formData);
+    if (error) {
+      toast.error(error);
       return;
     }
 
@@ -52,8 +50,9 @@ export default function Step2({
 
           <Input
             type="number"
-            min={1}
-            max={300}
+            min={limits.weight.min}
+            max={limits.weight.max}
+            step={0.1}
             value={formData.weight}
             onChange={(e) =>
               setFormData({
@@ -70,8 +69,9 @@ export default function Step2({
 
           <Input
             type="number"
-            min={1}
-            max={250}
+            min={limits.height.min}
+            max={limits.height.max}
+            step={0.1}
             value={formData.height}
             onChange={(e) =>
               setFormData({

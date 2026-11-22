@@ -64,6 +64,46 @@ describe('health assessment steps', () => {
     expect(nextStep).not.toHaveBeenCalled();
   });
 
+  it('Step1 should reject pregnant users under 12 years', () => {
+    const nextStep = vi.fn();
+
+    render(
+      <Step1
+        nextStep={nextStep}
+        formData={{ ...baseFormData, category: 'ibu_hamil', age: 11 }}
+        setFormData={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Range: 12 - 60 tahun')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    expect(toastMocks.error).toHaveBeenCalledWith(
+      'Umur ibu hamil harus 12 - 60 tahun',
+    );
+    expect(nextStep).not.toHaveBeenCalled();
+  });
+
+  it('Step2 should apply weight limits that match the age', () => {
+    const nextStep = vi.fn();
+
+    render(
+      <Step2
+        nextStep={nextStep}
+        prevStep={vi.fn()}
+        formData={{ ...baseFormData, category: 'balita', age: 24 }}
+        setFormData={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    expect(toastMocks.error).toHaveBeenCalledWith(
+      'Berat badan harus antara 0,9 - 50 kg',
+    );
+    expect(nextStep).not.toHaveBeenCalled();
+  });
+
   it('Step1 should continue when basic fields are valid', () => {
     const nextStep = vi.fn();
 
