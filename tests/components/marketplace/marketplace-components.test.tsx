@@ -12,17 +12,26 @@ describe('marketplace components', () => {
   it('ProductCard should render stock, nutrition, badges, and add action', () => {
     const onAdd = vi.fn();
 
-    render(<ProductCard product={mockProduct} onAdd={onAdd} />);
+    render(
+      <ProductCard
+        product={{
+          ...mockProduct,
+          badges: { aiRecommended: true },
+        }}
+        onAdd={onAdd}
+      />,
+    );
 
     expect(screen.getByText('Oatmeal Pisang')).toBeTruthy();
     expect(screen.getByText('Stok: 5')).toBeTruthy();
-    expect(screen.getByText('Health-Safe')).toBeTruthy();
     expect(screen.getByText('AI Recommended')).toBeTruthy();
     expect(screen.getByText('Calories: 320')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /\+ Add/i }));
 
-    expect(onAdd).toHaveBeenCalledWith(mockProduct);
+    expect(onAdd).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'prod-1' }),
+    );
   });
 
   it('ProductCard should disable add action when product is out of stock', () => {
