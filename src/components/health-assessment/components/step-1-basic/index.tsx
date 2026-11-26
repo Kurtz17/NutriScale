@@ -2,6 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  formatAgeRange,
+  getHealthLimits,
+  validateAge,
+} from '@/lib/health-assessment-limits';
 import { HealthFormData } from '@/types/health-assessment';
 import { toast } from 'sonner';
 
@@ -13,6 +18,7 @@ type Props = {
 
 export default function Step1({ nextStep, formData, setFormData }: Props) {
   const isBalita = formData.category === 'balita';
+  const ageLimit = getHealthLimits(formData.category, Number(formData.age)).age;
 
   const handleNext = () => {
     if (!formData.gender || !formData.category || formData.age === '') {
@@ -20,19 +26,10 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
       return;
     }
 
-    const age = Number(formData.age);
-
-    // 🔥 VALIDASI UMUR DINAMIS
-    if (isBalita) {
-      if (age < 0 || age > 60) {
-        toast.error('Umur balita harus 0 - 60 bulan');
-        return;
-      }
-    } else {
-      if (age < 5 || age > 110) {
-        toast.error('Umur harus 5 - 110 tahun');
-        return;
-      }
+    const ageError = validateAge(formData);
+    if (ageError) {
+      toast.error(ageError);
+      return;
     }
 
     nextStep();
@@ -94,8 +91,8 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
 
           <Input
             type="number"
-            min={isBalita ? 0 : 5}
-            max={isBalita ? 60 : 110}
+            min={ageLimit.min}
+            max={ageLimit.max}
             value={formData.age}
             onChange={(e) =>
               setFormData({
@@ -106,7 +103,7 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
           />
 
           <p className="text-sm text-gray-500 mt-1">
-            {isBalita ? 'Range: 0 - 60 bulan' : 'Range: 5 - 110 tahun'}
+            Range: {formatAgeRange(formData.category)}
           </p>
         </div>
 

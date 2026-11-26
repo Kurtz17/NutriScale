@@ -27,6 +27,23 @@ describe('Server Action: saveHealthAssessment', () => {
     expect(result.error).toContain('Unauthorized');
   });
 
+  it.each([
+    ['umur di bawah batas', { category: 'ibu_hamil', age: 11 }],
+    ['umur pecahan', { age: 25.5 }],
+    ['umur bukan angka', { age: 'abc' }],
+    ['berat kosong', { weight: '' }],
+    ['tinggi yang membuat BMI overflow', { weight: 300, height: 1 }],
+  ])('should reject invalid input before saving: %s', async (_, override) => {
+    const result = await saveHealthAssessment(
+      { ...MOCK_FORM_DATA, ...override } as never,
+      'user_123',
+    );
+
+    expect(result.success).toBe(false);
+    expect(prisma.profilKesehatan.create).not.toHaveBeenCalled();
+    expect(prisma.profilKesehatan.update).not.toHaveBeenCalled();
+  });
+
   it('should create a new health profile if none exists', async () => {
     vi.mocked(prisma.profilKesehatan.findFirst).mockResolvedValue(null);
     vi.mocked(fetch).mockResolvedValue({

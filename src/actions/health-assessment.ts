@@ -2,6 +2,10 @@
 
 import { JenisKelamin, Prisma } from '@/app/generated/prisma/client';
 import {
+  validateAge,
+  validateAnthropometry,
+} from '@/lib/health-assessment-limits';
+import {
   ambilHasilParserAlergi,
   formatPantanganMedis,
   formatTeksOpsional,
@@ -22,6 +26,11 @@ export async function saveHealthAssessment(
   try {
     if (!userId) {
       return { success: false, error: 'Unauthorized. User ID is missing.' };
+    }
+
+    const inputError = validateAge(formData) ?? validateAnthropometry(formData);
+    if (inputError) {
+      return { success: false, error: inputError };
     }
 
     const jenisKelamin = mapGender(formData.gender);
