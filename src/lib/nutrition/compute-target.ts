@@ -166,7 +166,9 @@ export function computeTargetNutrition(
   const ageYears =
     input.ageYears !== undefined && input.ageYears !== null
       ? Number(input.ageYears)
-      : 25;
+      : input.ageMonths !== undefined && input.ageMonths !== null
+        ? Number(input.ageMonths) / 12
+        : 25;
 
   let ageMonths = input.ageMonths;
   // Jika usia < 3 tahun dan ageMonths belum ada, hitung dari ageYears * 12

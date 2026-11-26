@@ -156,7 +156,7 @@ export default function Step1({ nextStep, formData, setFormData }: Props) {
             }
           >
             <option value="">Select stress factor</option>
-            <option value="1.0">Normal / Tanpa Stres Fisik (1.0)</option>
+            <option value="1">Normal / Tanpa Stres Fisik (1.0)</option>
             <option value="1.2">Stres Ringan / Infeksi Ringan (1.2)</option>
             <option value="1.3">Stres Sedang / Operasi Ringan (1.3)</option>
             <option value="1.5">Stres Berat / Trauma / Luka Bakar (1.5)</option>

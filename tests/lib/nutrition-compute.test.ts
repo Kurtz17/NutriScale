@@ -60,6 +60,9 @@ describe('computeTargetNutrition Service', () => {
     expect(result.method).toContain('DRI 2023 EER usia 0–<3 tahun');
     expect(result.calories).toBeGreaterThan(0);
     expect(result.lifeStage).toBe('toddler1to3');
+    expect(result.statusNutrisi).toBe('Normal');
+    expect(result.haz).toBeGreaterThan(-2);
+    expect(result.haz).toBeLessThan(2);
   });
 
   it('handles child 3 to 18 years', () => {

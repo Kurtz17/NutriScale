@@ -226,4 +226,37 @@ describe('Server Action: saveHealthAssessment', () => {
       }),
     );
   });
+
+  it('should treat ANAK_BALITA age in months for HAZ/WHZ & calories while sending months to AI', async () => {
+    vi.stubEnv('AI_ENGINE_URL', 'http://ai-engine.test');
+    vi.mocked(prisma.profilKesehatan.findFirst).mockResolvedValue(null);
+    vi.mocked(fetch).mockResolvedValue({ ok: false, status: 503 } as never);
+
+    const result = await saveHealthAssessment(
+      {
+        gender: 'female',
+        category: 'balita',
+        age: '8',
+        weight: '8',
+        height: '70',
+      } as never,
+      'user_balita',
+    );
+
+    expect(result.success).toBe(true);
+    const riwayatCall = vi.mocked(prisma.riwayatAnalisis.create).mock
+      .calls[0][0];
+    expect(riwayatCall.data.statusNutrisi).toBe('Normal');
+    expect(riwayatCall.data.haz).toBeGreaterThan(-1);
+    expect(riwayatCall.data.haz).toBeLessThan(2);
+    expect(riwayatCall.data.whz).toBeGreaterThan(-1);
+    expect(riwayatCall.data.whz).toBeLessThan(1);
+
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string);
+    expect(body.umur).toBe(8);
+    expect(body.kategoriKondisi).toBe('ANAK_BALITA');
+    expect(body.nutrisi.lifeStage).toBe('infantUnder1');
+    expect(body.asesmen.statusNutrisi).toBe('Normal');
+    vi.unstubAllEnvs();
+  });
 });
