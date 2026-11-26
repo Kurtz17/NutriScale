@@ -90,9 +90,12 @@ export async function saveHealthAssessment(
     // --- 1. KALKULASI TARGET GIZI LOKAL (NUTRISCALE NUTRI-CALC ENGINE) ---
     // Sistem menghitung sendiri target nutrisi tanpa bergantung pada API AI eksternal.
     // Anjuran dokter menjadi prioritas utama apabila disediakan.
+    // Khusus ANAK_BALITA, form mengirimkan umur dalam satuan BULAN (0-60).
+    const isBalita = kategoriKondisi === 'ANAK_BALITA';
     const targetNutrisi = computeTargetNutrition({
       sex: jenisKelamin === JenisKelamin.LAKI_LAKI ? 'male' : 'female',
-      ageYears: umur,
+      ageYears: isBalita ? umur / 12 : umur,
+      ageMonths: isBalita ? umur : undefined,
       weightKg: beratBadan,
       heightCm: tinggiBadan,
       category: kategoriKondisi,

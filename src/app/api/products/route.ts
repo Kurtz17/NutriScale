@@ -60,9 +60,12 @@ export async function GET() {
         } else if (profile.anjuranKaloriDokter) {
           targetCalories = profile.anjuranKaloriDokter;
         } else if (profile.beratBadan && profile.tinggiBadan) {
+          const isBalita = profile.kategoriKondisi === 'ANAK_BALITA';
+          const rawAge = profile.umur ?? 25;
           const computed = computeTargetNutrition({
             sex: profile.jenisKelamin,
-            ageYears: profile.umur ?? 25,
+            ageYears: isBalita ? rawAge / 12 : rawAge,
+            ageMonths: isBalita ? rawAge : undefined,
             weightKg: Number(profile.beratBadan),
             heightCm: Number(profile.tinggiBadan),
             category: profile.kategoriKondisi,
